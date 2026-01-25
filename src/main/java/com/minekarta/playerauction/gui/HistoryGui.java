@@ -23,6 +23,8 @@ public class HistoryGui extends PaginatedGui {
         super(plugin, player, page, 45);
         this.kah = plugin;
         this.targetPlayerId = targetPlayerId;
+        // Mark as async GUI - we'll call openInventory() after build completes
+        setAsync(true);
     }
 
     @Override
@@ -34,35 +36,46 @@ public class HistoryGui extends PaginatedGui {
     protected void build() {
         // Fetch transactions and build page
         kah.getTransactionLogger().getHistory(targetPlayerId, page, itemsPerPage + 1)
-            .thenAcceptAsync(fetchedTransactions -> {
+            .thenAccept(fetchedTransactions -> {
                 this.hasNextPage = fetchedTransactions.size() > itemsPerPage;
                 this.transactions = hasNextPage ? fetchedTransactions.subList(0, itemsPerPage) : fetchedTransactions;
 
-                // Populate transaction items
-                for (int i = 0; i < transactions.size(); i++) {
-                    Transaction transaction = transactions.get(i);
-                    ItemStack displayItem = createHistoryItem(transaction);
-                    inventory.setItem(i, displayItem);
-                }
+                // Run on main thread to populate items
+                plugin.getServer().getScheduler().runTask(plugin, () -> {
+                    // Populate transaction items
+                    for (int i = 0; i < transactions.size(); i++) {
+                        Transaction transaction = transactions.get(i);
+                        ItemStack displayItem = createHistoryItem(transaction);
+                        inventory.setItem(i, displayItem);
+                    }
 
-                // Show empty message if no transactions
-                if (transactions.isEmpty()) {
-                    ItemStack emptyItem = new GuiItemBuilder(Material.WRITABLE_BOOK)
-                        .setName("&6No Transaction History")
-                        .setLore(
-                            "&7You don't have any auction transactions yet.",
-                            "&8Start buying or selling items to see your history!",
-                            "",
-                            "&aBrowse the auction house to get started."
-                        )
-                        .build();
-                    inventory.setItem(22, emptyItem); // Center position
-                }
-            }).thenRunAsync(() -> {
-                // Run on main thread to build the static parts of the GUI
-                addControlBar();
-                addCustomControls(); // Add our specific controls
-            }, runnable -> plugin.getServer().getScheduler().runTask(plugin, runnable));
+                    // Show empty message if no transactions
+                    if (transactions.isEmpty()) {
+                        ItemStack emptyItem = new GuiItemBuilder(Material.WRITABLE_BOOK)
+                            .setName("§6No Transaction History")
+                            .setLore(
+                                "§7You don't have any auction transactions yet.",
+                                "§8Start buying or selling items to see your history!",
+                                "",
+                                "§aBrowse the auction house to get started."
+                            )
+                            .build();
+                        inventory.setItem(22, emptyItem);
+                    }
+
+                    // Add control bar and custom controls
+                    addControlBar();
+                    addCustomControls();
+
+                    // ✅ FIX: Open inventory AFTER build is complete
+                    openInventory();
+                });
+            }).exceptionally(ex -> {
+                kah.getLogger().severe("Error building HistoryGui: " + ex.getMessage());
+                ex.printStackTrace();
+                plugin.getServer().getScheduler().runTask(plugin, this::openInventory);
+                return null;
+            });
     }
 
     private void addCustomControls() {

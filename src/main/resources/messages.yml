@@ -233,54 +233,55 @@ gui:
     # Player Info (center display)
     player-info:
       - ""
-      - "<gradient:gold:yellow><bold>{player_name}</bold></gradient>"
+      - "&#FFD700&l{player_name}"
       - ""
-      - "<gray>Balance:</gray> <green>{balance}</green>"
-      - "<gray>Page:</gray> <yellow>{page}</yellow><dark_gray>/</dark_gray><yellow>{total_pages}</yellow>"
+      - "&7Balance: &a{balance}"
+      - "&7Page: &e{page}&8/&e{total_pages}"
       - ""
 
-  # ✅ IMPROVED: Item Lore Templates - NO DUPLICATE ITEM NAME!
+  # ✅ IMPROVED: Item Lore Templates with Modern Hex Colors
+  # Note: Item lore doesn't support MiniMessage gradients, so we use hex colors (&#RRGGBB)
   item-lore:
     - ""
-    - "<gradient:gold:yellow>▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬</gradient>"
-    - "<white><bold>Auction Details</bold></white>"
-    - "<gradient:gold:yellow>▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬</gradient>"
+    - "&#FFD700▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
+    - "&f&lAuction Details"
+    - "&#FFD700▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
     - ""
-    - "<gray>Seller:</gray> <yellow>{seller}</yellow>"
-    - "<gray>Price:</gray> <gold><bold>{price}</bold></gold>"
+    - "&7Seller: &e{seller}"
+    - "&7Price: &#FFD700&l{price}"
     - ""
-    - "<gray>Time Left:</gray> <aqua>{time_left}</aqua>"
-    - "<gray>Status:</gray> {status_color}{status}"
+    - "&7Time Left: &b{time_left}"
+    - "&7Status: {status_color}{status}"
     - ""
-    - "<gradient:gold:yellow>▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬</gradient>"
+    - "&#FFD700▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
 
-  # ✅ NEW: Action buttons section
+  # ✅ Action buttons section with hex colors
   item-action:
-    can-purchase: "<gradient:green:aqua><bold>✓ CLICK TO BUY</bold></gradient>\n<dark_gray>▸ Instant purchase available</dark_gray>"
-    insufficient-funds: "<red><bold>✘ CANNOT AFFORD</bold></red>\n<dark_gray>▸ {affordable_text}</dark_gray>"
+    can-purchase: "&#00D4AA&l✓ CLICK TO BUY\n&8▸ Instant purchase available"
+    insufficient-funds: "&c&l✘ CANNOT AFFORD\n&8▸ {affordable_text}"
 
   my-listings-lore:
     - ""
-    - "<gradient:aqua:blue>▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬</gradient>"
-    - "<white><bold>Your Listing</bold></white>"
-    - "<gradient:aqua:blue>▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬</gradient>"
+    - "&#5DADE2▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
+    - "&f&lYour Listing"
+    - "&#5DADE2▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
     - ""
-    - "<gray>Price:</gray> <gold>{starting_price}</gold>"
-    - "<gray>Duration:</gray> <yellow>{duration}</yellow>"
-    - "<gray>Time Left:</gray> <aqua>{time_left}</aqua>"
+    - "&7Price: &#FFD700{starting_price}"
+    - "&7Duration: &e{duration}"
+    - "&7Time Left: &b{time_left}"
     - ""
-    - "<gray>Bids:</gray> <white>{bidder_count}</white>"
-    - "<gray>Status:</gray> {status_color}{status}"
+    - "&7Bids: &f{bidder_count}"
+    - "&7Status: {status_color}{status}"
     - ""
-    - "<gradient:aqua:blue>▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬</gradient>"
+    - "&#5DADE2▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
     - ""
-    - "<yellow><bold>» CLICK FOR OPTIONS</bold></yellow>"
-    - "<dark_gray>Right-click to cancel</dark_gray>"
+    - "&e&l» CLICK FOR OPTIONS"
+    - "&8Right-click to cancel"
 
   # Status Messages
   status:
-    active: "<green><bold>✓ ACTIVE</bold></green>"
-    expired: "<red><bold>✘ EXPIRED</bold></red>"
-    sold: "<gold><bold>★ SOLD</bold></gold>"
-    cancelled: "<gray><bold>⊘ CANCELLED</bold></gray>"
-    reserve_not_met: "<yellow><bold>⚠ RESERVE NOT MET</bold></yellow>"
+    active: "&a&l✓ ACTIVE"
+    expired: "&c&l✘ EXPIRED"
+    sold: "&#FFD700&l★ SOLD"
+    cancelled: "&7&l⊘ CANCELLED"
+    reserve_not_met: "&e&l⚠ RESERVE NOT MET"

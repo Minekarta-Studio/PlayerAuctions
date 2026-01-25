@@ -22,6 +22,7 @@ public abstract class Gui implements InventoryHolder, Listener {
     protected final JavaPlugin plugin;
     protected final Player player;
     protected Inventory inventory;
+    private boolean isAsync = false;
 
     public Gui(JavaPlugin plugin, Player player) {
         this.plugin = plugin;
@@ -33,11 +34,43 @@ public abstract class Gui implements InventoryHolder, Listener {
     protected abstract void build();
     protected abstract void onClick(InventoryClickEvent event);
 
+    /**
+     * Mark this GUI as async. When true, the GUI will NOT auto-open after build().
+     * The subclass must call openInventory() manually after async operations complete.
+     */
+    protected void setAsync(boolean async) {
+        this.isAsync = async;
+    }
+
     public void open() {
         inventory = Bukkit.createInventory(this, getSize(), getTitle());
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         this.build();
-        player.openInventory(inventory);
+
+        // Only auto-open if not async - async GUIs will call openInventory() themselves
+        if (!isAsync) {
+            player.openInventory(inventory);
+        }
+    }
+
+    /**
+     * Opens the inventory to the player.
+     * For async GUIs, call this after all async operations complete.
+     * Ensures execution on main thread.
+     */
+    protected void openInventory() {
+        if (player.isOnline()) {
+            // Ensure we're on main thread
+            if (Bukkit.isPrimaryThread()) {
+                player.openInventory(inventory);
+            } else {
+                plugin.getServer().getScheduler().runTask(plugin, () -> {
+                    if (player.isOnline()) {
+                        player.openInventory(inventory);
+                    }
+                });
+            }
+        }
     }
 
     @Override

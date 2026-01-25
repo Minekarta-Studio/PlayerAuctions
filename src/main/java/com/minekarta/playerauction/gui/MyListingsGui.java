@@ -29,8 +29,10 @@ public class MyListingsGui extends PaginatedGui {
     private static final int ITEMS_PER_PAGE = AUCTION_SLOTS.length; // 28 items per page
 
     public MyListingsGui(PlayerAuction plugin, Player player, int page) {
-        super(plugin, player, page, ITEMS_PER_PAGE);  // ✅ FIX: Use 28 instead of 45
+        super(plugin, player, page, ITEMS_PER_PAGE);
         this.kah = plugin;
+        // Mark as async GUI - we'll call openInventory() after build completes
+        setAsync(true);
     }
 
     /**
@@ -69,34 +71,44 @@ public class MyListingsGui extends PaginatedGui {
                 this.hasNextPage = fetchedAuctions.size() > itemsPerPage;
                 this.auctions = hasNextPage ? fetchedAuctions.subList(0, itemsPerPage) : fetchedAuctions;
 
-                // ✅ FIX: Populate auction items at correct slots
-                for (int i = 0; i < auctions.size(); i++) {
-                    Auction auction = auctions.get(i);
-                    ItemStack displayItem = createAuctionItem(auction);
-                    int guiSlot = getSlotForItemIndex(i);
-                    if (guiSlot != -1) {
-                        inventory.setItem(guiSlot, displayItem);
+                // Populate auction items on main thread
+                plugin.getServer().getScheduler().runTask(plugin, () -> {
+                    for (int i = 0; i < auctions.size(); i++) {
+                        Auction auction = auctions.get(i);
+                        ItemStack displayItem = createAuctionItem(auction);
+                        int guiSlot = getSlotForItemIndex(i);
+                        if (guiSlot != -1) {
+                            inventory.setItem(guiSlot, displayItem);
+                        }
                     }
-                }
 
-                // Show empty message if no auctions (center of GUI)
-                if (auctions.isEmpty()) {
-                    ItemStack emptyItem = new GuiItemBuilder(Material.BARRIER)
-                        .setName("&cNo Active Listings")
-                        .setLore(
-                            "&7You don't have any active auction listings.",
-                            "&8Create a listing to start selling items!",
-                            "",
-                            "&aClick 'Create Auction' to get started."
-                        )
-                        .build();
-                    inventory.setItem(22, emptyItem); // Center position (slot 22 is in row 2)
-                }
-            }).thenRunAsync(() -> {
-                // Build the static parts of the GUI on the main thread
-                addControlBar(); // From PaginatedGui
-                addCustomControls(); // Add our specific controls
-            }, runnable -> plugin.getServer().getScheduler().runTask(plugin, runnable));
+                    // Show empty message if no auctions
+                    if (auctions.isEmpty()) {
+                        ItemStack emptyItem = new GuiItemBuilder(Material.BARRIER)
+                            .setName("§cNo Active Listings")
+                            .setLore(
+                                "§7You don't have any active auction listings.",
+                                "§8Create a listing to start selling items!",
+                                "",
+                                "§aClick 'Create Auction' to get started."
+                            )
+                            .build();
+                        inventory.setItem(22, emptyItem);
+                    }
+
+                    // Add control bar and custom controls
+                    addControlBar();
+                    addCustomControls();
+
+                    // ✅ FIX: Open inventory AFTER build is complete
+                    openInventory();
+                });
+            }).exceptionally(ex -> {
+                kah.getLogger().severe("Error building MyListingsGui: " + ex.getMessage());
+                ex.printStackTrace();
+                plugin.getServer().getScheduler().runTask(plugin, this::openInventory);
+                return null;
+            });
     }
 
     private void addCustomControls() {

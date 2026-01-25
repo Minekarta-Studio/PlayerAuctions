@@ -42,10 +42,12 @@ public class MainAuctionGui extends PaginatedGui {
     private static final int ITEMS_PER_PAGE = AUCTION_SLOTS.length; // 28 items per page
 
     public MainAuctionGui(PlayerAuction plugin, Player player, int page, SortOrder sortOrder, String searchQuery) {
-        super(plugin, player, page, ITEMS_PER_PAGE);  // ✅ FIX: Use 28 instead of 45
+        super(plugin, player, page, ITEMS_PER_PAGE);
         this.kah = plugin;
         this.sortOrder = sortOrder;
         this.searchQuery = searchQuery;
+        // Mark as async GUI - we'll call openInventory() after build completes
+        setAsync(true);
     }
 
     /**
@@ -86,7 +88,6 @@ public class MainAuctionGui extends PaginatedGui {
         // Get auctions for the current page and player balance
         CompletableFuture<List<Auction>> pageAuctionsFuture = kah.getAuctionService().getActiveAuctions(page, itemsPerPage, AuctionCategory.ALL, sortOrder, searchQuery);
         CompletableFuture<Double> balanceFuture = kah.getEconomyRouter().getService().getBalance(player.getUniqueId());
-        // Get the total count of active auctions to calculate total pages accurately
         CompletableFuture<Integer> totalCountFuture = kah.getAuctionService().getTotalActiveAuctionCount();
 
         // Combine all futures
@@ -95,41 +96,45 @@ public class MainAuctionGui extends PaginatedGui {
             this.hasNextPage = fetchedAuctions.size() > itemsPerPage;
             this.auctions = hasNextPage ? fetchedAuctions.subList(0, itemsPerPage) : fetchedAuctions;
 
-            // Populate auction items
-            for (int i = 0; i < this.auctions.size(); i++) {
-                Auction auction = this.auctions.get(i);
-                ItemStack displayItem = createAuctionItem(auction, balance);
-                inventory.setItem(getSlotForItemIndex(i), displayItem);
-            }
-
-            return balance; // Return balance for use in the next step
-        }).thenCombine(totalCountFuture, (balance, totalCount) -> {
-            // Calculate total pages based on total count
-            int totalPages = (int) Math.ceil((double) totalCount / itemsPerPage);
-            return new Object[]{totalPages, balance};
-        }).thenCompose(data -> {
-            int totalPages = (Integer) data[0];
-            double balance = (Double) data[1];
-
-            // Build the static parts of the GUI on the main thread
-            // We need to run this on the main thread to update the inventory
-            CompletableFuture<Void> future = new CompletableFuture<>();
+            // Populate auction items on main thread
             plugin.getServer().getScheduler().runTask(plugin, () -> {
-                try {
-                    // Temporarily store the total pages to be used in createPlayerInfoItem
-                    // We'll update the player info item after the control bar is added
-                    addControlBar(); // From PaginatedGui
-                    addCustomControls(); // Add our specific controls
-
-                    // Update the player info item with the correct total pages
-                    updatePlayerInfoItem(totalPages);
-
-                    future.complete(null);
-                } catch (Exception e) {
-                    future.completeExceptionally(e);
+                for (int i = 0; i < this.auctions.size(); i++) {
+                    Auction auction = this.auctions.get(i);
+                    ItemStack displayItem = createAuctionItem(auction, balance);
+                    inventory.setItem(getSlotForItemIndex(i), displayItem);
                 }
             });
-            return future;
+
+            return balance;
+        }).thenCombine(totalCountFuture, (balance, totalCount) -> {
+            int totalPages = (int) Math.ceil((double) totalCount / itemsPerPage);
+            if (totalPages == 0) totalPages = 1;
+            return new Object[]{totalPages, balance};
+        }).thenAccept(data -> {
+            int totalPages = (Integer) data[0];
+
+            // Build static parts and open inventory on main thread
+            plugin.getServer().getScheduler().runTask(plugin, () -> {
+                try {
+                    addControlBar();
+                    addCustomControls();
+                    updatePlayerInfoItem(totalPages);
+
+                    // ✅ FIX: Open inventory AFTER build is complete
+                    openInventory();
+                } catch (Exception e) {
+                    kah.getLogger().severe("Error building MainAuctionGui: " + e.getMessage());
+                    e.printStackTrace();
+                    // Still try to open inventory
+                    openInventory();
+                }
+            });
+        }).exceptionally(ex -> {
+            kah.getLogger().severe("Error in MainAuctionGui build: " + ex.getMessage());
+            ex.printStackTrace();
+            // Open inventory even on error
+            plugin.getServer().getScheduler().runTask(plugin, this::openInventory);
+            return null;
         });
     }
 
@@ -177,7 +182,7 @@ public class MainAuctionGui extends PaginatedGui {
         ItemStack item = auction.item().toItemStack();
         GuiItemBuilder builder = new GuiItemBuilder(item);
 
-        // Get clean item display name (no duplication needed - item already has display name)
+        // Get clean item display name
         String itemDisplayName = item.hasItemMeta() && item.getItemMeta().hasDisplayName()
             ? item.getItemMeta().getDisplayName()
             : formatItemName(item.getType().toString());
@@ -193,10 +198,9 @@ public class MainAuctionGui extends PaginatedGui {
             .addPlaceholder("reserve_price", auction.reservePrice() != null ?
                 kah.getEconomyRouter().getService().format(auction.reservePrice()) : "N/A");
 
-        // Time left with color coding
+        // Time left
         long timeLeft = auction.endAt() - System.currentTimeMillis();
         String timeStr = TimeUtil.formatDuration(timeLeft);
-
         context.addPlaceholder("time_left", timeStr);
         context.addPlaceholder("duration", TimeUtil.formatDuration(auction.endAt() - auction.createdAt()));
 
@@ -207,35 +211,37 @@ public class MainAuctionGui extends PaginatedGui {
         // Price with affordability info
         double price = auction.price();
         String formattedPrice = kah.getEconomyRouter().getService().format(price);
-
         context.addPlaceholder("price", formattedPrice);
         context.addPlaceholder("affordable_text", playerBalance >= price ?
             "You can afford this item" : "Need more money to purchase");
 
-        // ✅ FIX: Build lore from messages.yml using Component for MiniMessage support
-        List<net.kyori.adventure.text.Component> lore = new ArrayList<>();
+        // ✅ FIX: Build lore using String with hex colors (not Component - item lore doesn't support gradients)
+        List<String> lore = new ArrayList<>();
 
-        // Get lore template from messages.yml and parse as Components
+        // Get lore template from messages.yml
         List<String> rawLore = kah.getConfigManager().getMessages().getStringList("gui.item-lore");
         for (String loreLine : rawLore) {
-            // ✅ FIX: Use processMessageAsComponent() to preserve MiniMessage gradients
-            // loreLine is the actual message content like "<gradient:gold:yellow>▬▬▬..."
-            // Component lore preserves gradients in item tooltips!
-            net.kyori.adventure.text.Component processed = kah.getConfigManager().processMessageAsComponent(loreLine, context);
+            // Process message with placeholders and hex color support
+            String processed = kah.getConfigManager().processMessage(loreLine, context);
             lore.add(processed);
         }
 
-        // ✅ FIX: Add action buttons as Components from messages.yml
-        lore.add(net.kyori.adventure.text.Component.empty());
+        // Add action buttons
+        lore.add("");
         if (playerBalance >= price) {
-            net.kyori.adventure.text.Component actionButton = kah.getConfigManager().getComponent("gui.item-action.can-purchase", context);
-            lore.add(actionButton);
+            String actionMsg = kah.getConfigManager().getMessage("gui.item-action.can-purchase", context);
+            // Handle multi-line action buttons (split by \n)
+            for (String line : actionMsg.split("\n")) {
+                lore.add(line);
+            }
         } else {
-            net.kyori.adventure.text.Component actionButton = kah.getConfigManager().getComponent("gui.item-action.insufficient-funds", context);
-            lore.add(actionButton);
+            String actionMsg = kah.getConfigManager().getMessage("gui.item-action.insufficient-funds", context);
+            for (String line : actionMsg.split("\n")) {
+                lore.add(line);
+            }
         }
 
-        return builder.setLoreComponents(lore).build();  // ✅ Use Component lore for gradients!
+        return builder.setLore(lore).build();
     }
 
     /**
