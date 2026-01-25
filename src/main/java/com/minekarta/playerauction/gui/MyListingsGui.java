@@ -147,28 +147,28 @@ public class MyListingsGui extends PaginatedGui {
         }
         context.addPlaceholder("time_left", timeStr);
 
-        // Status information
+        // Status information with modern hex colors
         String statusText;
         String statusColor;
         switch (auction.status()) {
             case ACTIVE:
-                statusColor = "&a";
+                statusColor = "&#2ECC71"; // Emerald
                 statusText = "ACTIVE";
                 break;
             case FINISHED:
-                statusColor = "&e";
+                statusColor = "&#F5A623"; // Amber Gold
                 statusText = "SOLD";
                 break;
             case CANCELLED:
-                statusColor = "&c";
+                statusColor = "&#7F8C8D"; // Slate Gray
                 statusText = "CANCELLED";
                 break;
             case EXPIRED:
-                statusColor = "&8";
+                statusColor = "&#E74C3C"; // Coral Red
                 statusText = "EXPIRED";
                 break;
             default:
-                statusColor = "&7";
+                statusColor = "&#BDC3C7"; // Silver
                 statusText = auction.status().name();
                 break;
         }

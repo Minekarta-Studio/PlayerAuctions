@@ -1,287 +1,272 @@
-# ================================
-# PlayerAuctions Messages Configuration
-# ================================
+# ════════════════════════════════════════════════════════════════════════════════
+#                        PLAYERAUCTIONS - MESSAGES CONFIGURATION
+# ════════════════════════════════════════════════════════════════════════════════
 #
-# This plugin uses MiniMessage format by default for modern, beautiful text formatting!
+# 🎨 MODERN COLOR PALETTE (Unique Hex Colors - NOT Legacy Minecraft):
 #
-# 📘 MiniMessage Format (Default):
-#    - Basic Colors: <red>Text</red>, <green>Text</green>, <gold>Text</gold>
-#    - Gradients: <gradient:red:blue>Text</gradient>
-#    - Hex Colors: <color:#FF0000>Text</color>
-#    - Formatting: <bold>Bold</bold>, <italic>Italic</italic>
-#    - Hover: <hover:show_text:'Tooltip'>Hover me</hover>
-#    - Click: <click:run_command:'/cmd'>Clickable</click>
-#    - Combined: <gradient:gold:yellow><bold>Beautiful!</bold></gradient>
+#   PRIMARY:
+#   ├─ Amber Gold    : #F5A623  → Prices, highlights
+#   ├─ Emerald       : #2ECC71  → Success
+#   ├─ Coral Red     : #E74C3C  → Errors
+#   ├─ Sky Blue      : #3498DB  → Information
+#   └─ Orchid Purple : #9B59B6  → Special
 #
-# 🎨 Alternative Formats (Also Supported):
-#    - Hex Colors: &#FF0000Text
-#    - RGB Colors: &rgb(255,0,0)Text
-#    - Legacy: &a, &c, &e (for backward compatibility)
+#   NEUTRAL:
+#   ├─ Cloud White   : #ECF0F1  → Primary text
+#   ├─ Silver        : #BDC3C7  → Secondary text
+#   ├─ Slate Gray    : #7F8C8D  → Labels
+#   └─ Charcoal      : #2C3E50  → Separators
 #
-# 💡 Placeholders: {placeholder} or %placeholder%
-#    Both formats work! Examples: {player_name}, %player_name%
+#   ACCENT:
+#   ├─ Sunflower     : #F1C40F  → Warnings
+#   └─ Carrot        : #E67E22  → Secondary accent
 #
-# 🔗 Learn More: https://docs.advntr.dev/minimessage/
-# ================================
+# ════════════════════════════════════════════════════════════════════════════════
 
-# ========================================
+# ════════════════════════════════════════
 # PREFIX
-# ========================================
-prefix: "<gradient:gold:yellow><bold>[PlayerAuctions]</bold></gradient> <gray>»</gray> "
+# ════════════════════════════════════════
+prefix: "<#F5A623><bold>PA</bold></#F5A623> <#2C3E50>›</#2C3E50> "
 
-# ========================================
+# ════════════════════════════════════════
 # AUCTION MESSAGES
-# ========================================
+# ════════════════════════════════════════
 auction:
-  purchase-success: "<gradient:green:aqua><bold>Purchase Successful!</bold></gradient> <gray>You bought</gray> <white>{item}</white> <gray>for</gray> <gold>{price}</gold><gray>! Check your mailbox.</gray>"
-  sold: "<gradient:gold:yellow><bold>Item Sold!</bold></gradient> <gray>Your</gray> <white>{item}</white> <gray>sold for</gray> <gold>{price}</gold><gray>! Money is in your mailbox.</gray>"
-  expired: "<yellow><bold>Auction Expired</bold></yellow> <gray>Your auction for</gray> <white>{item}</white> <gray>expired. Item returned to mailbox.</gray>"
-  search_no_results: "<red>No Results Found</red> <gray>No items matching</gray> <yellow>'{keyword}'</yellow><gray>. Try different keywords.</gray>"
-  cancel-success: "<green>Auction Cancelled</green> <gray>Your</gray> <white>{item}</white> <gray>has been returned to your mailbox.</gray>"
+  purchase-success: "<#2ECC71>●</#2ECC71> <#ECF0F1>Purchased</#ECF0F1> <#FFFFFF>{item}</#FFFFFF> <#7F8C8D>for</#7F8C8D> <#F5A623>{price}</#F5A623>"
+  sold: "<#F5A623>★</#F5A623> <#ECF0F1>Sold</#ECF0F1> <#FFFFFF>{item}</#FFFFFF> <#7F8C8D>for</#7F8C8D> <#2ECC71>{price}</#2ECC71>"
+  expired: "<#E67E22>⏱</#E67E22> <#ECF0F1>Auction expired</#ECF0F1> <#7F8C8D>›</#7F8C8D> <#FFFFFF>{item}</#FFFFFF>"
+  search_no_results: "<#E74C3C>○</#E74C3C> <#BDC3C7>No results for</#BDC3C7> <#F1C40F>'{keyword}'</#F1C40F>"
+  cancel-success: "<#2ECC71>●</#2ECC71> <#ECF0F1>Cancelled</#ECF0F1> <#FFFFFF>{item}</#FFFFFF> <#7F8C8D>› returned to mailbox</#7F8C8D>"
 
-# ========================================
+# ════════════════════════════════════════
 # ERROR MESSAGES
-# ========================================
+# ════════════════════════════════════════
 errors:
-  no-permission: "<red><bold>✘ Permission Denied</bold></red> <gray>Contact server staff if this is an error.</gray>"
-  
-  usage-sell: "<red>Invalid Usage!</red> <yellow>/ah sell <price> [buyNow] [duration]</yellow>\n<gray>  • <green><price></green> - Set the item price\n  • <aqua>[buyNow]</aqua> - Optional instant buy price\n  • <aqua>[duration]</aqua> - Auction duration (default: config setting)</gray>"
-  usage-search: "<red>Usage:</red> <yellow>{usage}</yellow>"
-  usage-notify: "<red>Usage:</red> <yellow>{usage}</yellow>"
-  usage-duration: "<red>Invalid Duration Format!</red> <gray>Use:</gray> <yellow>1h, 24h, 3d, 1w</yellow> <gray>(hours, days, weeks)</gray>"
-  usage-debug: "<red>Usage:</red> <yellow>{usage}</yellow>"
-  usage-admin: "<red>Usage:</red> <yellow>{usage}</yellow>"
-  
-  invalid-category: "<red>Invalid Category:</red> <yellow>{category}</yellow>\n<gray>Valid categories:</gray> <green>WEAPONS, ARMOR, BLOCKS, FOOD, POTIONS, TOOLS, MISC</green>"
-  not-a-number: "<red>Invalid Number!</red> <gray>Please enter a valid number like</gray> <yellow>100</yellow> <gray>or</gray> <yellow>150.50</yellow>"
-  no-item-in-hand: "<red>No Item in Hand!</red> <gray>Hold an item to list it in the auction house.</gray>"
-  
-  price-too-low: "<red>Price Too Low!</red> <gray>Minimum price is</gray> <gold>{min}</gold><gray>. Set a higher price.</gray>"
-  price-too-high: "<red>Price Too High!</red> <gray>Maximum price is</gray> <gold>{max}</gold><gray>.</gray>"
-  duration-out-of-range: "<red>Invalid Duration!</red> <gray>Must be between</gray> <yellow>{min}</yellow> <gray>and</gray> <yellow>{max}</yellow><gray>.</gray>"
-  
-  auction-not-found: "<red>Auction Not Found!</red> <gray>This auction may have ended or been removed.</gray>"
-  cannot-buy-own: "<red>Cannot Buy Own Item!</red> <gray>You cannot purchase your own auction.</gray>"
-  buy-fail: "<red>Purchase Failed!</red> <gray>The item may have already been sold.</gray>"
-  
-  economy-fail: "<dark_red><bold>Economy Error!</bold></dark_red> <gray>Please contact an administrator.</gray>"
-  inventory-full: "<red>Inventory Full!</red> <gray>Make space in your inventory and try again.</gray>"
-  player-not-found: "<red>Player Not Found:</red> <yellow>{player}</yellow> <gray>Check the name and try again.</gray>"
-  
-  listing-limit-reached: "<red>Listing Limit Reached!</red> <gray>Maximum active listings:</gray> <yellow>{limit}</yellow><gray>. Cancel some or wait for them to expire.</gray>"
-  not-your-auction: "<red>Not Your Auction!</red> <gray>You can only modify your own listings.</gray>"
-  auction-not-active: "<red>Auction Not Active!</red> <gray>Only active auctions can be modified.</gray>"
-  
-  reload-fail: "<red>Reload Failed!</red> <gray>Check console for errors.</gray>"
-  reload-success: "<green><bold>✓ Reload Successful!</bold></green> <gray>All configurations reloaded.</gray>"
-  
-  generic-error: "<red>Unexpected Error!</red> <gray>Please try again or contact an administrator.</gray>"
-  too-few-items: "<red>Not Enough Items!</red> <gray>You must sell at least one item.</gray>"
-  not-enough-money: "<red>Insufficient Funds!</red> <gray>You need</gray> <gold>{amount}</gold> <gray>to purchase this item.</gray>"
-  insufficient-funds: "<red>Insufficient Funds!</red> <gray>Need:</gray> <gold>{needed}</gold> <gray>| Have:</gray> <gold>{balance}</gold>"
-  
-  invalid-auction-params: "<red>Invalid Parameters!</red> <gray>Check your prices and duration.</gray>"
-  cannot-cancel-status: "<red>Cannot Cancel!</red> <gray>This auction status prevents cancellation.</gray>"
-  cancel-failed: "<red>Cancellation Failed!</red> <gray>Could not cancel listing. Please try again.</gray>"
-  
+  no-permission: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Permission denied</#BDC3C7>"
+
+  usage-sell: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Usage:</#BDC3C7> <#3498DB>/ah sell <price> [buyNow] [duration]</#3498DB>"
+  usage-search: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Usage:</#BDC3C7> <#3498DB>{usage}</#3498DB>"
+  usage-notify: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Usage:</#BDC3C7> <#3498DB>{usage}</#3498DB>"
+  usage-duration: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Invalid duration</#BDC3C7> <#7F8C8D>› Use:</#7F8C8D> <#3498DB>1h, 24h, 3d, 1w</#3498DB>"
+  usage-debug: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Usage:</#BDC3C7> <#3498DB>{usage}</#3498DB>"
+  usage-admin: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Usage:</#BDC3C7> <#3498DB>{usage}</#3498DB>"
+
+  invalid-category: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Invalid category:</#BDC3C7> <#F1C40F>{category}</#F1C40F>"
+  not-a-number: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Invalid number</#BDC3C7> <#7F8C8D>› Example:</#7F8C8D> <#3498DB>100</#3498DB>"
+  no-item-in-hand: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Hold an item to list</#BDC3C7>"
+
+  price-too-low: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Price too low</#BDC3C7> <#7F8C8D>› Min:</#7F8C8D> <#F5A623>{min}</#F5A623>"
+  price-too-high: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Price too high</#BDC3C7> <#7F8C8D>› Max:</#7F8C8D> <#F5A623>{max}</#F5A623>"
+  duration-out-of-range: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Duration must be</#BDC3C7> <#3498DB>{min}</#3498DB> <#7F8C8D>to</#7F8C8D> <#3498DB>{max}</#3498DB>"
+
+  auction-not-found: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Auction not found</#BDC3C7>"
+  cannot-buy-own: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Cannot buy your own item</#BDC3C7>"
+  buy-fail: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Purchase failed</#BDC3C7> <#7F8C8D>› Item may be sold</#7F8C8D>"
+
+  economy-fail: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Economy error</#BDC3C7> <#7F8C8D>› Contact admin</#7F8C8D>"
+  inventory-full: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Inventory full</#BDC3C7>"
+  player-not-found: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Player not found:</#BDC3C7> <#F1C40F>{player}</#F1C40F>"
+
+  listing-limit-reached: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Listing limit reached</#BDC3C7> <#7F8C8D>› Max:</#7F8C8D> <#3498DB>{limit}</#3498DB>"
+  not-your-auction: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Not your auction</#BDC3C7>"
+  auction-not-active: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Auction not active</#BDC3C7>"
+
+  reload-fail: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Reload failed</#BDC3C7> <#7F8C8D>› Check console</#7F8C8D>"
+  reload-success: "<#2ECC71>●</#2ECC71> <#ECF0F1>Configuration reloaded</#ECF0F1>"
+
+  generic-error: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Something went wrong</#BDC3C7>"
+  too-few-items: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Not enough items</#BDC3C7>"
+  not-enough-money: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Insufficient funds</#BDC3C7> <#7F8C8D>› Need:</#7F8C8D> <#F5A623>{amount}</#F5A623>"
+  insufficient-funds: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Insufficient funds</#BDC3C7> <#7F8C8D>› Need:</#7F8C8D> <#F5A623>{needed}</#F5A623> <#7F8C8D>Have:</#7F8C8D> <#2ECC71>{balance}</#2ECC71>"
+
+  invalid-auction-params: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Invalid parameters</#BDC3C7>"
+  cannot-cancel-status: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Cannot cancel this auction</#BDC3C7>"
+  cancel-failed: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Cancellation failed</#BDC3C7>"
+
   auction-parameters-validation:
-    min-price: "<red>Price Too Low!</red> <gray>Starting price must be at least</gray> <gold>{min}</gold><gray>.</gray>"
-    buy-now-higher: "<red>Invalid Buy Now Price!</red> <gray>Must be higher than starting price.</gray>"
-    reserve-higher: "<red>Invalid Reserve Price!</red> <gray>Must be higher than starting price.</gray>"
-    duration-too-long: "<red>Duration Too Long!</red> <gray>Maximum duration:</gray> <yellow>{max_duration}</yellow>"
-  
-  player-only: "<red>Players Only!</red> <gray>This command can only be used by players.</gray>"
-  unknown-command: "<red>Unknown Command:</red> <yellow>{command}</yellow> <gray>Use</gray> <yellow>{usage}</yellow> <gray>for help.</gray>"
+    min-price: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Price too low</#BDC3C7> <#7F8C8D>› Min:</#7F8C8D> <#F5A623>{min}</#F5A623>"
+    buy-now-higher: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Buy-now must exceed starting price</#BDC3C7>"
+    reserve-higher: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Reserve must exceed starting price</#BDC3C7>"
+    duration-too-long: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Duration too long</#BDC3C7> <#7F8C8D>› Max:</#7F8C8D> <#3498DB>{max_duration}</#3498DB>"
 
-  # Search validation errors
-  empty-search-query: "<red>Empty Query!</red> <gray>Search query cannot be empty.</gray> <yellow>Type 'cancel' to exit.</yellow>"
-  search-query-too-short: "<red>Query Too Short!</red> <gray>Please enter at least 2 characters.</gray> <yellow>Type 'cancel' to exit.</yellow>"
-  search-query-too-long: "<red>Query Too Long!</red> <gray>Maximum 50 characters.</gray> <yellow>Type 'cancel' to exit.</yellow>"
+  player-only: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Players only</#BDC3C7>"
+  unknown-command: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Unknown command:</#BDC3C7> <#F1C40F>{command}</#F1C40F>"
 
-# ========================================
+  empty-search-query: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Empty query</#BDC3C7> <#7F8C8D>› Type 'cancel' to exit</#7F8C8D>"
+  search-query-too-short: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Query too short</#BDC3C7> <#7F8C8D>› Min 2 characters</#7F8C8D>"
+  search-query-too-long: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Query too long</#BDC3C7> <#7F8C8D>› Max 50 characters</#7F8C8D>"
+
+# ════════════════════════════════════════
 # INFO MESSAGES
-# ========================================
+# ════════════════════════════════════════
 info:
-  enter-search-query: "<aqua><bold>Search Mode Activated</bold></aqua> <gray>Type your search query in chat.</gray> <yellow>Type 'cancel' to exit.</yellow>"
-  
-  listed: "<gradient:green:aqua><bold>✓ Item Listed!</bold></gradient> <white>{item}</white> <gray>for</gray> <gold>{price}</gold> <gray>• Duration:</gray> <yellow>{duration}</yellow>"
-  
-  bid-placed: "<green><bold>✓ Bid Placed!</bold></green> <gray>You bid</gray> <gold>{amount}</gold> <gray>on</gray> <white>{item}</white><gray>. You'll be notified if outbid.</gray>"
-  outbid: "<yellow><bold>⚠ Outbid!</bold></yellow> <gray>Someone outbid you on</gray> <white>{item}</white><gray>! Money returned to mailbox.</gray>"
-  you-are-highest: "<gradient:green:aqua><bold>★ Highest Bidder!</bold></gradient> <gray>You're winning</gray> <white>{item}</white> <gray>with</gray> <gold>{amount}</gold>"
-  
-  notifications-on: "<green><bold>✓ Notifications Enabled</bold></green> <gray>You'll receive auction updates.</gray>"
-  notifications-off: "<yellow><bold>⚠ Notifications Disabled</bold></yellow> <gray>You won't receive auction updates.</gray>"
-  
-  bought: "<gradient:green:aqua><bold>Purchase Complete!</bold></gradient> <gray>You bought</gray> <white>{item}</white> <gray>for</gray> <gold>{amount}</gold><gray>! Check</gray> <yellow>/ah mailbox</yellow>"
-  
-  sold: "<gradient:gold:yellow><bold>★ Sale Complete!</bold></gradient> <white>{item}</white> <gray>sold for</gray> <gold>{amount}</gold> <gray>• Tax:</gray> <red>{tax}%</red> <gray>• You received:</gray> <green>{net_amount}</green>"
-  
-  expired-returned: "<yellow>Auction Expired</yellow> <gray>Your</gray> <white>{item}</white> <gray>didn't sell. Item returned to</gray> <yellow>/ah mailbox</yellow>"
-  cancelled: "<green>Auction Cancelled</green> <gray>Your</gray> <white>{item}</white> <gray>returned to</gray> <yellow>/ah mailbox</yellow>"
-  
-  anti_sniping_extended: "<aqua><bold>⏰ Anti-Snipe!</bold></aqua> <gray>Auction extended by</gray> <yellow>{extension}</yellow> <gray>due to late bid.</gray>"
-  minimum_bid_increment: "<yellow>Minimum Increment:</yellow> <gold>{increment}</gold> <gray>required for this auction.</gray>"
-  
-  confirm-cancel: "<yellow>Confirm Cancellation</yellow> <gray>Cancel auction for</gray> <white>{item}</white> <gray>(</gray><gold>{price}</gold><gray>)?</gray>"
-  create-auction-unavailable: "<red>Feature Unavailable</red> <gray>Create auction feature is currently disabled.</gray>"
-  reload-success: "<green><bold>✓ Success!</bold></green> <gray>Configuration reloaded successfully.</gray>"
+  enter-search-query: "<#3498DB>◎</#3498DB> <#ECF0F1>Search mode</#ECF0F1> <#7F8C8D>› Type query or 'cancel'</#7F8C8D>"
 
-  # Search messages
-  search-cancelled: "<yellow>Search Cancelled</yellow> <gray>Returning to auction house.</gray>"
-  search-started: "<aqua><bold>🔍 Searching...</bold></aqua> <gray>Query:</gray> <yellow>\"{query}\"</yellow>"
+  listed: "<#2ECC71>●</#2ECC71> <#ECF0F1>Listed</#ECF0F1> <#FFFFFF>{item}</#FFFFFF> <#7F8C8D>›</#7F8C8D> <#F5A623>{price}</#F5A623> <#7F8C8D>›</#7F8C8D> <#3498DB>{duration}</#3498DB>"
 
-# ========================================
+  bid-placed: "<#2ECC71>●</#2ECC71> <#ECF0F1>Bid placed</#ECF0F1> <#7F8C8D>›</#7F8C8D> <#F5A623>{amount}</#F5A623> <#7F8C8D>on</#7F8C8D> <#FFFFFF>{item}</#FFFFFF>"
+  outbid: "<#E67E22>⚡</#E67E22> <#ECF0F1>Outbid</#ECF0F1> <#7F8C8D>on</#7F8C8D> <#FFFFFF>{item}</#FFFFFF> <#7F8C8D>› Money returned</#7F8C8D>"
+  you-are-highest: "<#F5A623>★</#F5A623> <#ECF0F1>Highest bidder</#ECF0F1> <#7F8C8D>on</#7F8C8D> <#FFFFFF>{item}</#FFFFFF> <#7F8C8D>at</#7F8C8D> <#F5A623>{amount}</#F5A623>"
+
+  notifications-on: "<#2ECC71>●</#2ECC71> <#ECF0F1>Notifications enabled</#ECF0F1>"
+  notifications-off: "<#E67E22>○</#E67E22> <#BDC3C7>Notifications disabled</#BDC3C7>"
+
+  bought: "<#2ECC71>●</#2ECC71> <#ECF0F1>Purchased</#ECF0F1> <#FFFFFF>{item}</#FFFFFF> <#7F8C8D>for</#7F8C8D> <#F5A623>{amount}</#F5A623>"
+
+  sold: "<#F5A623>★</#F5A623> <#ECF0F1>Sold</#ECF0F1> <#FFFFFF>{item}</#FFFFFF> <#7F8C8D>for</#7F8C8D> <#F5A623>{amount}</#F5A623> <#7F8C8D>› Tax:</#7F8C8D> <#E74C3C>{tax}%</#E74C3C> <#7F8C8D>› Net:</#7F8C8D> <#2ECC71>{net_amount}</#2ECC71>"
+
+  expired-returned: "<#E67E22>⏱</#E67E22> <#BDC3C7>Expired</#BDC3C7> <#7F8C8D>›</#7F8C8D> <#FFFFFF>{item}</#FFFFFF> <#7F8C8D>returned</#7F8C8D>"
+  cancelled: "<#2ECC71>●</#2ECC71> <#ECF0F1>Cancelled</#ECF0F1> <#7F8C8D>›</#7F8C8D> <#FFFFFF>{item}</#FFFFFF> <#7F8C8D>returned</#7F8C8D>"
+
+  anti_sniping_extended: "<#3498DB>⏰</#3498DB> <#ECF0F1>Anti-snipe</#ECF0F1> <#7F8C8D>› Extended by</#7F8C8D> <#F1C40F>{extension}</#F1C40F>"
+  minimum_bid_increment: "<#3498DB>ℹ</#3498DB> <#BDC3C7>Min increment:</#BDC3C7> <#F5A623>{increment}</#F5A623>"
+
+  confirm-cancel: "<#E67E22>?</#E67E22> <#ECF0F1>Cancel</#ECF0F1> <#FFFFFF>{item}</#FFFFFF> <#7F8C8D>at</#7F8C8D> <#F5A623>{price}</#F5A623><#7F8C8D>?</#7F8C8D>"
+  create-auction-unavailable: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Feature unavailable</#BDC3C7>"
+  reload-success: "<#2ECC71>●</#2ECC71> <#ECF0F1>Configuration reloaded</#ECF0F1>"
+
+  search-cancelled: "<#E67E22>○</#E67E22> <#BDC3C7>Search cancelled</#BDC3C7>"
+  search-started: "<#3498DB>◎</#3498DB> <#ECF0F1>Searching</#ECF0F1> <#7F8C8D>›</#7F8C8D> <#F1C40F>\"{query}\"</#F1C40F>"
+
+# ════════════════════════════════════════
 # ADMIN MESSAGES
-# ========================================
+# ════════════════════════════════════════
 admin:
-  debug-enabled: "<green><bold>✓ Debug Mode ON</bold></green> <gray>You can now interact with your own auctions.</gray>"
-  debug-disabled: "<yellow><bold>⚠ Debug Mode OFF</bold></yellow> <gray>Normal auction rules apply.</gray>"
-  cannot-interact-with-own: "<red>Debug Mode Required!</red> <gray>Enable debug mode to interact with your own auctions.</gray>"
+  debug-enabled: "<#2ECC71>●</#2ECC71> <#ECF0F1>Debug mode enabled</#ECF0F1>"
+  debug-disabled: "<#E67E22>○</#E67E22> <#BDC3C7>Debug mode disabled</#BDC3C7>"
+  cannot-interact-with-own: "<#E74C3C>✕</#E74C3C> <#BDC3C7>Enable debug mode first</#BDC3C7>"
 
-# ========================================
+# ════════════════════════════════════════
 # MAILBOX MESSAGES
-# ========================================
+# ════════════════════════════════════════
 mailbox:
-  received-money: "<gradient:green:aqua><bold>✓ Money Received!</bold></gradient> <gold>{amount}</gold> <gray>• Reason:</gray> <yellow>{note}</yellow>"
-  received-item: "<gradient:green:aqua><bold>✓ Item Received!</bold></gradient> <white>{item}</white> <gray>• Reason:</gray> <yellow>{note}</yellow>"
-  claimed-money: "<green><bold>✓ Claimed!</bold></green> <gray>You claimed</gray> <gold>{amount}</gold> <gray>from your mailbox.</gray>"
-  claimed-item: "<green><bold>✓ Claimed!</bold></green> <gray>You claimed</gray> <white>{item}</white> <gray>from your mailbox.</gray>"
-  no_items: "<yellow>Mailbox Empty</yellow> <gray>No items or money waiting for you.</gray>"
-  items_waiting: "<gradient:gold:yellow><bold>📬 Mailbox Alert!</bold></gradient> <gray>You have</gray> <green>{count}</green> <gray>items waiting!</gray>"
+  received-money: "<#2ECC71>●</#2ECC71> <#ECF0F1>Received</#ECF0F1> <#F5A623>{amount}</#F5A623> <#7F8C8D>› {note}</#7F8C8D>"
+  received-item: "<#2ECC71>●</#2ECC71> <#ECF0F1>Received</#ECF0F1> <#FFFFFF>{item}</#FFFFFF> <#7F8C8D>› {note}</#7F8C8D>"
+  claimed-money: "<#2ECC71>●</#2ECC71> <#ECF0F1>Claimed</#ECF0F1> <#F5A623>{amount}</#F5A623>"
+  claimed-item: "<#2ECC71>●</#2ECC71> <#ECF0F1>Claimed</#ECF0F1> <#FFFFFF>{item}</#FFFFFF>"
+  no_items: "<#7F8C8D>○</#7F8C8D> <#BDC3C7>Mailbox empty</#BDC3C7>"
+  items_waiting: "<#F5A623>📬</#F5A623> <#ECF0F1>Mailbox</#ECF0F1> <#7F8C8D>›</#7F8C8D> <#2ECC71>{count}</#2ECC71> <#7F8C8D>items waiting</#7F8C8D>"
 
-# ========================================
-# GUI MESSAGES
-# ========================================
+# ════════════════════════════════════════════════════════════════════════════════
+# GUI MESSAGES - Modern Hex Colors (no legacy codes)
+# ════════════════════════════════════════════════════════════════════════════════
 gui:
-  # GUI Titles (displayed at top of inventory)
-  main-title: "<gradient:gold:yellow><bold>PlayerAuctions</bold></gradient> <dark_gray>•</dark_gray> <white>Market</white>"
-  my-listings-title: "<gradient:aqua:blue><bold>My Listings</bold></gradient> <dark_gray>•</dark_gray> <white>Active Auctions</white>"
-  mailbox-title: "<gradient:green:aqua><bold>Mailbox</bold></gradient> <dark_gray>•</dark_gray> <white>Items & Money</white>"
-  history-title: "<gradient:light_purple:pink><bold>History</bold></gradient> <dark_gray>•</dark_gray> <white>Transactions</white>"
-  search-title: "<gradient:aqua:blue><bold>Search</bold></gradient> <dark_gray>•</dark_gray> <yellow>\"{query}\"</yellow>"
-  
-  # Control Items (buttons in GUI)
+  main-title: "&#F5A623ᴘʟᴀʏᴇʀᴀᴜᴄᴛɪᴏɴs"
+  my-listings-title: "&#3498DBᴍʏ ʟɪsᴛɪɴɢs"
+  mailbox-title: "&#2ECC71ᴍᴀɪʟʙᴏx"
+  history-title: "&#9B59B6ʜɪsᴛᴏʀʏ"
+  search-title: "&#3498DBsᴇᴀʀᴄʜ"
+
   control-items:
-    # Pagination
-    previous-page: "<green><bold>« PREVIOUS</bold></green>"
+    previous-page: "&#2ECC71‹ ᴘʀᴇᴠ"
     previous-page-lore:
       - ""
-      - "<gray>Go to previous page</gray>"
+      - "&#BDC3C7Go to previous page"
       - ""
-      - "<dark_gray>Page <yellow>{current_page}</yellow> of <yellow>{total_pages}</yellow></dark_gray>"
-      
-    next-page: "<green><bold>NEXT »</bold></green>"
+      - "&#7F8C8DPage &#ECF0F1{current_page} &#7F8C8Dof &#ECF0F1{total_pages}"
+
+    next-page: "&#2ECC71ɴᴇxᴛ ›"
     next-page-lore:
       - ""
-      - "<gray>Go to next page</gray>"
+      - "&#BDC3C7Go to next page"
       - ""
-      - "<dark_gray>Page <yellow>{current_page}</yellow> of <yellow>{total_pages}</yellow></dark_gray>"
-    
-    # Actions
-    close: "<red><bold>✘ CLOSE</bold></red>"
+      - "&#7F8C8DPage &#ECF0F1{current_page} &#7F8C8Dof &#ECF0F1{total_pages}"
+
+    close: "&#E74C3C✕ ᴄʟᴏsᴇ"
     close-lore:
       - ""
-      - "<gray>Close this window</gray>"
-      - "<dark_gray>Your progress is saved</dark_gray>"
+      - "&#BDC3C7Close this menu"
 
-    sort: "<gold><bold>⚙ SORT</bold></gold>"
+    sort: "&#F5A623⚙ sᴏʀᴛ"
     sort-lore:
       - ""
-      - "<gray>Current:</gray> <yellow>{sort_order}</yellow>"
+      - "&#BDC3C7Current: &#ECF0F1{sort_order}"
       - ""
-      - "<white>Available options:</white>"
-      - "<dark_gray>  ▸ Newest First</dark_gray>"
-      - "<dark_gray>  ▸ Price (Low → High)</dark_gray>"
-      - "<dark_gray>  ▸ Price (High → Low)</dark_gray>"
-      - "<dark_gray>  ▸ Time Remaining</dark_gray>"
+      - "&#7F8C8D› Newest First"
+      - "&#7F8C8D› Price Low → High"
+      - "&#7F8C8D› Price High → Low"
+      - "&#7F8C8D› Ending Soon"
       - ""
-      - "<gradient:gold:yellow>» Click to cycle «</gradient>"
+      - "&#F5A623Click to change"
 
-    search: "<aqua><bold>🔍 SEARCH</bold></aqua>"
+    search: "&#3498DB◎ sᴇᴀʀᴄʜ"
     search-lore:
       - ""
-      - "<gray>Find specific items</gray>"
+      - "&#BDC3C7Find specific items"
       - ""
-      - "<yellow>Current:</yellow> <white>{query}</white>"
+      - "&#7F8C8DCurrent: &#ECF0F1{query}"
       - ""
-      - "<gradient:aqua:blue>» Click to search «</gradient>"
+      - "&#3498DBClick to search"
 
-    my-listings: "<yellow><bold>📋 MY LISTINGS</bold></yellow>"
+    my-listings: "&#E67E22◈ ᴍʏ ʟɪsᴛɪɴɢs"
     my-listings-lore:
       - ""
-      - "<gray>View your active auctions</gray>"
+      - "&#BDC3C7View your auctions"
       - ""
-      - "<green>Active:</green> <white>{count}</white><gray>/</gray><white>{max}</white>"
+      - "&#7F8C8DActive: &#ECF0F1{count}&#7F8C8D/&#ECF0F1{max}"
       - ""
-      - "<gradient:yellow:gold>» Click to view «</gradient>"
+      - "&#E67E22Click to view"
 
-    mailbox: "<gradient:green:aqua><bold>📬 MAILBOX</bold></gradient>"
+    mailbox: "&#2ECC71✉ ᴍᴀɪʟʙᴏx"
     mailbox-lore:
       - ""
-      - "<gray>Check your pending items</gray>"
+      - "&#BDC3C7Pending items & money"
       - ""
-      - "<yellow>Unclaimed:</yellow> <white>{count}</white>"
+      - "&#7F8C8DUnclaimed: &#ECF0F1{count}"
       - ""
-      - "<gradient:green:aqua>» Click to open «</gradient>"
+      - "&#2ECC71Click to open"
 
-    back: "<gold><bold>« BACK</bold></gold>"
+    back: "&#F5A623‹ ʙᴀᴄᴋ"
     back-lore:
       - ""
-      - "<gray>Return to previous menu</gray>"
-    
-    # Player Info (center display)
+      - "&#BDC3C7Return to previous menu"
+
     player-info:
       - ""
-      - "&#FFD700&l{player_name}"
+      - "&#F5A623{player_name}"
       - ""
-      - "&7Balance: &a{balance}"
-      - "&7Page: &e{page}&8/&e{total_pages}"
+      - "&#7F8C8DBalance  &#2ECC71{balance}"
+      - "&#7F8C8DPage     &#ECF0F1{page}&#7F8C8D/&#ECF0F1{total_pages}"
       - ""
 
-  # ✅ IMPROVED: Item Lore Templates with Modern Hex Colors
-  # Note: Item lore doesn't support MiniMessage gradients, so we use hex colors (&#RRGGBB)
+  # ════════════════════════════════════════
+  # ITEM LORE - Clean Modern Design
+  # ════════════════════════════════════════
   item-lore:
     - ""
-    - "&#FFD700▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
-    - "&f&lAuction Details"
-    - "&#FFD700▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
+    - "&#2C3E50━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     - ""
-    - "&7Seller: &e{seller}"
-    - "&7Price: &#FFD700&l{price}"
+    - "&#7F8C8DSeller   &#ECF0F1{seller}"
+    - "&#7F8C8DPrice    &#F5A623{price}"
     - ""
-    - "&7Time Left: &b{time_left}"
-    - "&7Status: {status_color}{status}"
+    - "&#7F8C8DEnds in  &#3498DB{time_left}"
+    - "&#7F8C8DStatus   {status_color}{status}"
     - ""
-    - "&#FFD700▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
+    - "&#2C3E50━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-  # ✅ Action buttons section with hex colors
   item-action:
-    can-purchase: "&#00D4AA&l✓ CLICK TO BUY\n&8▸ Instant purchase available"
-    insufficient-funds: "&c&l✘ CANNOT AFFORD\n&8▸ {affordable_text}"
+    can-purchase: "&#2ECC71▶ ᴄʟɪᴄᴋ ᴛᴏ ʙᴜʏ"
+    insufficient-funds: "&#E74C3C✕ ᴄᴀɴɴᴏᴛ ᴀғғᴏʀᴅ"
 
   my-listings-lore:
     - ""
-    - "&#5DADE2▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
-    - "&f&lYour Listing"
-    - "&#5DADE2▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
+    - "&#2C3E50━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     - ""
-    - "&7Price: &#FFD700{starting_price}"
-    - "&7Duration: &e{duration}"
-    - "&7Time Left: &b{time_left}"
+    - "&#7F8C8DPrice      &#F5A623{starting_price}"
+    - "&#7F8C8DDuration   &#3498DB{duration}"
+    - "&#7F8C8DTime Left  &#3498DB{time_left}"
     - ""
-    - "&7Bids: &f{bidder_count}"
-    - "&7Status: {status_color}{status}"
+    - "&#7F8C8DBids    &#ECF0F1{bidder_count}"
+    - "&#7F8C8DStatus  {status_color}{status}"
     - ""
-    - "&#5DADE2▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
+    - "&#2C3E50━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     - ""
-    - "&e&l» CLICK FOR OPTIONS"
-    - "&8Right-click to cancel"
+    - "&#E67E22▶ ᴄʟɪᴄᴋ ғᴏʀ ᴏᴘᴛɪᴏɴs"
+    - "&#7F8C8DRight-click to cancel"
 
-  # Status Messages
   status:
-    active: "&a&l✓ ACTIVE"
-    expired: "&c&l✘ EXPIRED"
-    sold: "&#FFD700&l★ SOLD"
-    cancelled: "&7&l⊘ CANCELLED"
-    reserve_not_met: "&e&l⚠ RESERVE NOT MET"
+    active: "&#2ECC71● ᴀᴄᴛɪᴠᴇ"
+    expired: "&#E74C3C● ᴇxᴘɪʀᴇᴅ"
+    sold: "&#F5A623★ sᴏʟᴅ"
+    cancelled: "&#7F8C8D○ ᴄᴀɴᴄᴇʟʟᴇᴅ"
+    reserve_not_met: "&#E67E22⚠ ʀᴇsᴇʀᴠᴇ ɴᴏᴛ ᴍᴇᴛ"

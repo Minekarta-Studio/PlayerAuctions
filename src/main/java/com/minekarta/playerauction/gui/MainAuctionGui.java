@@ -289,17 +289,18 @@ public class MainAuctionGui extends PaginatedGui {
     }
 
     private String getStatusColor(com.minekarta.playerauction.auction.model.AuctionStatus status) {
+        // Modern hex colors (not legacy Minecraft colors)
         switch (status) {
             case ACTIVE:
-                return "§a"; // Green for active
+                return "&#2ECC71"; // Emerald for active
             case FINISHED:
-                return "§6"; // Gold for sold
+                return "&#F5A623"; // Amber Gold for sold
             case CANCELLED:
-                return "§7"; // Gray for cancelled
+                return "&#7F8C8D"; // Slate Gray for cancelled
             case EXPIRED:
-                return "§c"; // Red for expired
+                return "&#E74C3C"; // Coral Red for expired
             default:
-                return "§f"; // White for unknown
+                return "&#ECF0F1"; // Cloud White for unknown
         }
     }
 

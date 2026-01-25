@@ -118,9 +118,15 @@ public class AuctionCommand implements CommandExecutor {
 
             auctionService.createListing(player, toSell, price, buyNow, null, durationMillis).thenAccept(success -> {
                 if (success) {
-                    player.sendMessage(configManager.getPrefixedMessage("info.listed", "{item}", toSell.getType().toString(), "{price}", String.valueOf(price)));
+                    // Format duration and price for display
+                    String formattedDuration = com.minekarta.playerauction.util.TimeUtil.formatDuration(durationMillis);
+                    String formattedPrice = plugin.getEconomyRouter().getService().format(price);
+                    player.sendMessage(configManager.getPrefixedMessage("info.listed",
+                        "{item}", toSell.getType().toString(),
+                        "{price}", formattedPrice,
+                        "{duration}", formattedDuration));
                 } else {
-                    player.sendMessage(configManager.getPrefixedMessage("errors.generic-error", "Failed to list item."));
+                    player.sendMessage(configManager.getPrefixedMessage("errors.generic-error"));
                     player.getInventory().addItem(toSell); // Return item on failure
                 }
             });
