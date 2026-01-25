@@ -2,11 +2,15 @@
 
 PlayerAuctions is a modern and feature-rich auction house plugin for PaperMC servers. It provides a robust, intuitive, and scalable platform for players to buy and sell items, fully integrated with Vault-based economies and PlaceholderAPI.
 
-## 🆕 Latest Version (v2.1.0)
+## 🆕 Latest Version (v2.5.2) 🔴 CRITICAL UPDATE
 
-- **Modern Build**: Compatible with Minecraft 1.19-1.21
+- **Modern Build**: Compatible with Minecraft 1.19-1.21 (`PlayerAuctions-2.5.2-Modern.jar`)
 - **Legacy Build**: Compatible with Minecraft 1.16-1.18 (v1.9.9)
+- **Critical Fix**: Double purchase exploit prevention (security fix)
 - **Size Optimized**: Version-specific builds for better performance
+
+### 🔒 Security Update Notice
+Version 2.5.2 fixes a **critical security vulnerability** that allowed players to purchase the same auction item multiple times. All servers should update immediately to prevent economic exploitation.
 
 ## ✨ Features
 
@@ -16,13 +20,16 @@ PlayerAuctions is a modern and feature-rich auction house plugin for PaperMC ser
   - **Smart Layout**: Organized control panel with clear navigation buttons
   - **Real-time Updates**: Instant GUI refresh when auctions are bought, sold, or expired
   - **Player Info Display**: Shows player balance and current page in the center of the GUI
+  - **Search Functionality**: Working search system to find specific items quickly
+  - **Accurate Pagination**: Correct page counts when filtering by search or category
 
 - **Auction Management**:
   - **Instant Buy**: Players can purchase items immediately at set prices
   - **Listing Management**: View and manage your active auction listings
-  - **Search System**: Search for specific items using keywords
-  - **Sort Options**: Sort auctions by newest, oldest, or price
+  - **Search System**: Search for specific items using keywords in chat or GUI
+  - **Sort Options**: Sort auctions by newest, price (ascending/descending), or time remaining
   - **Purchase History**: Track your auction transaction history
+  - **Anti-Exploit Protection**: Atomic reservation system prevents duplicate purchases
 
 - **Command System**:
   - **Tab Completion**: Full command suggestions with descriptions
@@ -35,12 +42,21 @@ PlayerAuctions is a modern and feature-rich auction house plugin for PaperMC ser
   - **Time Indicators**: Color-coded time remaining (green for long, red for urgent)
   - **Clean Borders**: Optional decorative borders for a polished look
   - **Responsive Design**: Items display properly with proper formatting
+  - **MiniMessage Support**: Modern text formatting with gradients and hover effects
 
 - **Integration Support**:
   - **Vault Economy**: Full integration with Vault-based economies
   - **PlaceholderAPI**: Support for displaying auction data externally
-  - **JSON Storage**: Lightweight and reliable data storage (replaces SQLite)
+  - **JSON Storage**: Lightweight and reliable data storage with optimistic locking
   - **Multiple Economy Providers**: Support for various economy plugins
+  - **Thread-Safe Operations**: All inventory operations run on main thread for stability
+
+- **Security & Reliability**:
+  - **🔒 Double Purchase Prevention**: Atomic reservation prevents race conditions
+  - **🔄 Automatic Rollback**: Failed transactions automatically rollback to prevent data loss
+  - **🛡️ Optimistic Locking**: Version-based conflict detection for concurrent access
+  - **📊 Transaction Logging**: Complete audit trail of all auction activities
+  - **⚡ Error Recovery**: Comprehensive error handling with user feedback
 
 ## 🚀 Commands
 
@@ -188,9 +204,9 @@ Available placeholders for displaying auction data:
 ### Version-Specific Downloads
 PlayerAuctions provides optimized builds for different Minecraft versions:
 
-- **Modern Versions (1.19-1.21)**: `PlayerAuctions-2.1.0-Modern.jar` (~16MB)
+- **Modern Versions (1.19-1.21)**: `PlayerAuctions-2.5.2-Modern.jar` (~16MB)
 - **Legacy Versions (1.16-1.18)**: `PlayerAuctions-1.9.9-Legacy.jar` (~15MB)
-- **Version-Specific Builds**: `PlayerAuctions-2.1.0-1.20.jar`, `PlayerAuctions-2.1.0-1.19.jar`
+- **Version-Specific Builds**: `PlayerAuctions-2.5.2-1.20.jar`, `PlayerAuctions-2.5.2-1.19.jar`
 
 ### Installation Steps
 1. Choose the correct version for your Minecraft server
@@ -245,13 +261,13 @@ mvn clean package -Pmodern,legacy,1.20,1.19
 
 ### Generated Files
 After building, you'll find these files in `target/`:
-- `PlayerAuctions-2.1.0-Modern.jar` (~16MB) - Minecraft 1.19-1.21
+- `PlayerAuctions-2.5.2-Modern.jar` (~16MB) - Minecraft 1.19-1.21
 - `PlayerAuctions-1.9.9-Legacy.jar` (~15MB) - Minecraft 1.16-1.18
-- `PlayerAuctions-2.1.0-1.20.jar` (~16MB) - Minecraft 1.20.x
-- `PlayerAuctions-2.1.0-1.19.jar` (~16MB) - Minecraft 1.19.x
+- `PlayerAuctions-2.5.2-1.20.jar` (~16MB) - Minecraft 1.20.x
+- `PlayerAuctions-2.5.2-1.19.jar` (~16MB) - Minecraft 1.19.x
 
 ### Version Naming Scheme
-- **Modern Builds (v2.1.0)**: Latest features for modern Minecraft versions
+- **Modern Builds (v2.5.2)**: Latest features for modern Minecraft versions
 - **Legacy Builds (v1.9.9)**: Compatible build for older Minecraft versions
 - **Semantic Versioning**: Uses consistent version numbers instead of Minecraft versions
 - **No Breaking Changes**: All versions have same features, just optimized for different Minecraft versions

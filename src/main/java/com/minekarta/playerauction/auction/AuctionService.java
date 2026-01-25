@@ -85,51 +85,106 @@ public class AuctionService {
 
                 double buyPrice = auction.price();
 
-                return economy.withdraw(buyer.getUniqueId(), buyPrice, "Purchase item " + auction.id())
-                        .thenCompose(withdrawn -> {
-                            if (!withdrawn) {
-                                buyer.sendMessage(configManager.getPrefixedMessage("errors.economy-fail"));
-                                return CompletableFuture.completedFuture(false);
-                            }
+                // CRITICAL FIX: Reserve the auction FIRST by marking it as FINISHED
+                // This prevents race conditions where multiple buyers can purchase the same item
+                Auction reservedAuction = auction.withStatus(AuctionStatus.FINISHED).withIncrementedVersion();
+                return auctionStorage.updateAuctionIfVersionMatches(reservedAuction, auction.version())
+                    .thenCompose(reserved -> {
+                        if (!reserved) {
+                            // Another buyer already purchased this, or auction was modified
+                            buyer.sendMessage(configManager.getPrefixedMessage("errors.buy-fail"));
+                            return CompletableFuture.completedFuture(false);
+                        }
 
-                            double tax = configManager.getConfig().getDouble("auction.tax-percentage", 0);
-                            double sellerAmount = buyPrice * (1 - tax / 100.0);
+                        // Auction is now reserved, proceed with money transfer
+                        return economy.withdraw(buyer.getUniqueId(), buyPrice, "Purchase item " + auction.id())
+                            .thenCompose(withdrawn -> {
+                                if (!withdrawn) {
+                                    // Rollback: restore auction to ACTIVE
+                                    Auction rollbackAuction = auction.withStatus(AuctionStatus.ACTIVE).withIncrementedVersion();
+                                    auctionStorage.updateAuctionIfVersionMatches(rollbackAuction, reservedAuction.version());
+                                    buyer.sendMessage(configManager.getPrefixedMessage("errors.not-enough-money"));
+                                    return CompletableFuture.completedFuture(false);
+                                }
 
-                            // Give money to seller directly
-                            return economy.deposit(auction.seller(), sellerAmount, "Sold item " + auction.item().toItemStack().getType())
+                                double tax = configManager.getConfig().getDouble("auction.tax-percentage", 0);
+                                double sellerAmount = buyPrice * (1 - tax / 100.0);
+
+                                // Deposit to seller
+                                return economy.deposit(auction.seller(), sellerAmount, "Sold item")
                                     .thenCompose(v -> {
-                                        // Give item to buyer directly
-                                        ItemStack itemToGive = auction.item().toItemStack();
-                                        if (buyer.getInventory().firstEmpty() == -1) {
-                                            // Inventory full, drop item at player location
-                                            buyer.getWorld().dropItem(buyer.getLocation(), itemToGive);
-                                            buyer.sendMessage(configManager.getPrefixedMessage("inventory-full", "Inventory full, item dropped on ground"));
-                                        } else {
-                                            buyer.getInventory().addItem(itemToGive);
-                                        }
+                                        // Give item to buyer on MAIN THREAD (inventory operations must be sync)
+                                        CompletableFuture<Boolean> itemDelivery = new CompletableFuture<>();
 
-                                        Player seller = Bukkit.getPlayer(auction.seller());
-                                        if (seller != null) {
-                                            notificationManager.sendNotification(seller, "auction.sold", Map.of(
-                                                "%item%", auction.item().toItemStack().getType().toString(),
-                                                "%price%", economy.format(sellerAmount)
-                                            ));
-                                        }
+                                        plugin.getServer().getScheduler().runTask(plugin, () -> {
+                                            try {
+                                                ItemStack itemToGive = auction.item().toItemStack();
+                                                if (itemToGive == null) {
+                                                    plugin.getLogger().severe("Failed to deserialize item for auction " + auction.id());
+                                                    itemDelivery.complete(false);
+                                                    return;
+                                                }
 
-                                        Auction updatedAuction = auction.withStatus(AuctionStatus.FINISHED).withIncrementedVersion();
-                                        return auctionStorage.updateAuctionIfVersionMatches(updatedAuction, auction.version())
-                                                .thenApply(updated -> {
-                                                    if(updated) transactionLogger.log(auction, "SOLD", buyer.getUniqueId(), buyPrice);
-                                                    return updated;
-                                                });
+                                                if (buyer.getInventory().firstEmpty() == -1) {
+                                                    // Inventory full, drop at player location
+                                                    buyer.getWorld().dropItem(buyer.getLocation(), itemToGive);
+                                                    buyer.sendMessage(configManager.getPrefixedMessage("errors.inventory-full"));
+                                                } else {
+                                                    buyer.getInventory().addItem(itemToGive);
+                                                }
+
+                                                itemDelivery.complete(true);
+                                            } catch (Exception ex) {
+                                                plugin.getLogger().severe("Error delivering item: " + ex.getMessage());
+                                                ex.printStackTrace();
+                                                itemDelivery.complete(false);
+                                            }
+                                        });
+
+                                        return itemDelivery.thenApply(delivered -> {
+                                            if (delivered) {
+                                                // Success! Notify seller and log transaction
+                                                Player seller = Bukkit.getPlayer(auction.seller());
+                                                if (seller != null && seller.isOnline()) {
+                                                    notificationManager.sendNotification(seller, "auction.sold", Map.of(
+                                                        "%item%", auction.item().toItemStack() != null ?
+                                                            auction.item().toItemStack().getType().toString() : "Unknown",
+                                                        "%price%", economy.format(sellerAmount)
+                                                    ));
+                                                }
+
+                                                transactionLogger.log(auction, "SOLD", buyer.getUniqueId(), buyPrice);
+                                                return true;
+                                            } else {
+                                                // Item delivery failed - rare edge case
+                                                plugin.getLogger().warning("Item delivery failed for auction " + auction.id());
+                                                return false;
+                                            }
+                                        });
                                     })
                                     .exceptionally(ex -> {
-                                        // Refund buyer if seller deposit failed
-                                        return economy.deposit(buyer.getUniqueId(), buyPrice, "Refund - seller deposit failed")
-                                                .thenCompose(v -> CompletableFuture.completedFuture(false))
-                                                .join();
+                                        // Seller deposit failed - refund buyer and rollback auction
+                                        plugin.getLogger().severe("Seller deposit failed for auction " + auction.id() + ": " + ex.getMessage());
+                                        economy.deposit(buyer.getUniqueId(), buyPrice, "Refund - seller deposit failed");
+
+                                        // Rollback auction to ACTIVE
+                                        Auction rollbackAuction = auction.withStatus(AuctionStatus.ACTIVE).withIncrementedVersion();
+                                        auctionStorage.updateAuctionIfVersionMatches(rollbackAuction, reservedAuction.version());
+
+                                        buyer.sendMessage(configManager.getPrefixedMessage("errors.buy-fail"));
+                                        return false;
                                     });
-                        });
+                            })
+                            .exceptionally(ex -> {
+                                // Withdrawal failed - rollback auction
+                                plugin.getLogger().severe("Withdrawal failed for auction " + auction.id() + ": " + ex.getMessage());
+                                Auction rollbackAuction = auction.withStatus(AuctionStatus.ACTIVE).withIncrementedVersion();
+                                auctionStorage.updateAuctionIfVersionMatches(rollbackAuction, reservedAuction.version());
+
+                                buyer.sendMessage(configManager.getPrefixedMessage("errors.buy-fail"));
+                                return false;
+                            });
+                    });
             });
         });
     }
@@ -249,6 +304,16 @@ public class AuctionService {
 
     public CompletableFuture<Integer> getTotalActiveAuctionCount() {
         return auctionStorage.countAllActiveAuctions();
+    }
+
+    /**
+     * Gets total active auction count with the same filters used by getActiveAuctions.
+     * Used for accurate pagination when search/category is applied.
+     */
+    public CompletableFuture<Integer> getActiveAuctionCount(com.minekarta.playerauction.gui.model.AuctionCategory category,
+                                                           com.minekarta.playerauction.gui.model.SortOrder sortOrder,
+                                                           String searchQuery) {
+        return auctionStorage.countActiveAuctions(category, sortOrder, searchQuery);
     }
 
     // Public getters for fields needed by other classes

@@ -279,6 +279,24 @@ public class JsonAuctionStorage implements AuctionStorage {
         }, executor);
     }
 
+    @Override
+    public CompletableFuture<Integer> countActiveAuctions(AuctionCategory category, SortOrder sortOrder, String searchQuery) {
+        return CompletableFuture.supplyAsync(() -> {
+            lock.readLock().lock();
+            try {
+                final String normalizedQuery = (searchQuery == null) ? null : searchQuery.trim().toLowerCase();
+                return (int) auctions.stream()
+                    .filter(auction -> auction.status() == AuctionStatus.ACTIVE)
+                    .filter(auction -> category == AuctionCategory.ALL ||
+                        category.matches(auction.item().toItemStack().getType().name()))
+                    .filter(auction -> normalizedQuery == null || normalizedQuery.isEmpty() || matchesSearch(auction, normalizedQuery))
+                    .count();
+            } finally {
+                lock.readLock().unlock();
+            }
+        }, executor);
+    }
+
     private boolean matchesSearch(Auction auction, String searchQuery) {
         String itemType = auction.item().toItemStack().getType().name().toLowerCase();
         String itemName = auction.item().toItemStack().hasItemMeta() && 
@@ -302,3 +320,4 @@ public class JsonAuctionStorage implements AuctionStorage {
         }
     }
 }
+

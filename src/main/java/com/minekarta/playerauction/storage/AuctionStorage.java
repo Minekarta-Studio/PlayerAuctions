@@ -71,4 +71,10 @@ public interface AuctionStorage {
      * Finds a batch of auctions that have expired as of a given timestamp.
      */
     CompletableFuture<List<Auction>> findExpiredUpTo(long nowEpochMillis, int batchSize);
+
+    /**
+     * Counts the number of active auctions with the same filters as findActive/findActiveAuctions.
+     * This is used for accurate pagination when category/search is applied.
+     */
+    CompletableFuture<Integer> countActiveAuctions(AuctionCategory category, SortOrder sortOrder, String searchQuery);
 }

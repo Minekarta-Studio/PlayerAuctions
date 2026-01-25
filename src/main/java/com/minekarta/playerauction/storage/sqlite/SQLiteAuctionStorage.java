@@ -287,6 +287,44 @@ public class SQLiteAuctionStorage implements AuctionStorage {
         }, executor);
     }
 
+    @Override
+    public CompletableFuture<Integer> countActiveAuctions(AuctionCategory category, SortOrder sortOrder, String searchQuery) {
+        return CompletableFuture.supplyAsync(() -> {
+            StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM auctions WHERE status = 'ACTIVE'");
+            List<Object> params = new ArrayList<>();
+
+            if (category != AuctionCategory.ALL) {
+                sql.append(" AND item_type = ?");
+                params.add(category.name());
+            }
+
+            if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+                sql.append(" AND (LOWER(item_type) LIKE ? OR LOWER(item_name) LIKE ?)");
+                String searchPattern = "%" + searchQuery.trim().toLowerCase() + "%";
+                params.add(searchPattern);
+                params.add(searchPattern);
+            }
+
+            try (Connection conn = getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+                for (int i = 0; i < params.size(); i++) {
+                    ps.setObject(i + 1, params.get(i));
+                }
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getInt(1);
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+            return 0;
+        }, executor);
+    }
+
     private Auction mapRowToAuction(ResultSet rs) throws SQLException {
         return new Auction(
             UUID.fromString(rs.getString("auction_id")),

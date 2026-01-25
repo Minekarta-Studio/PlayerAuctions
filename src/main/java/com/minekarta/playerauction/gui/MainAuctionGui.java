@@ -88,7 +88,14 @@ public class MainAuctionGui extends PaginatedGui {
         // Get auctions for the current page and player balance
         CompletableFuture<List<Auction>> pageAuctionsFuture = kah.getAuctionService().getActiveAuctions(page, itemsPerPage, AuctionCategory.ALL, sortOrder, searchQuery);
         CompletableFuture<Double> balanceFuture = kah.getEconomyRouter().getService().getBalance(player.getUniqueId());
-        CompletableFuture<Integer> totalCountFuture = kah.getAuctionService().getTotalActiveAuctionCount();
+
+        // Use filtered count when search is active (accurate pagination for search results)
+        CompletableFuture<Integer> totalCountFuture;
+        if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+            totalCountFuture = kah.getAuctionService().getActiveAuctionCount(AuctionCategory.ALL, sortOrder, searchQuery);
+        } else {
+            totalCountFuture = kah.getAuctionService().getTotalActiveAuctionCount();
+        }
 
         // Combine all futures
         pageAuctionsFuture.thenCombine(balanceFuture, (fetchedAuctions, balance) -> {
@@ -448,9 +455,12 @@ public class MainAuctionGui extends PaginatedGui {
                             player.sendMessage(kah.getConfigManager().getPrefixedMessage("auction.purchase-success",
                                 "%item%", clickedAuction.item().toItemStack().getType().toString(),
                                 "%price%", kah.getEconomyRouter().getService().format(clickedAuction.price())));
-                            // Refresh the GUI
-                            new MainAuctionGui(kah, player, page, sortOrder, searchQuery).open();
+                        } else {
+                            // Purchase failed - item likely already sold or other error occurred
+                            player.sendMessage(kah.getConfigManager().getPrefixedMessage("errors.buy-fail"));
                         }
+                        // Always refresh GUI to show current state
+                        new MainAuctionGui(kah, player, page, sortOrder, searchQuery).open();
                     });
                 } else {
                     // Insufficient funds
@@ -474,8 +484,10 @@ public class MainAuctionGui extends PaginatedGui {
                 new MainAuctionGui(kah, player, 1, sortOrder, null).open();
             } else {
                 // Left-click to start search session
-                player.closeInventory();
+                // Start session first (so even if GUI closes immediately, chat capture is active)
                 kah.getSearchManager().startSearchSession(player, sortOrder);
+                // Close inventory on next tick for better reliability with click handler timing
+                kah.getServer().getScheduler().runTask(kah, () -> player.closeInventory());
             }
         } else if (slot == 50) { // My Listings button
             new MyListingsGui(kah, player, 1).open();
