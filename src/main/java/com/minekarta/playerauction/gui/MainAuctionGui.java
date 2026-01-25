@@ -145,37 +145,74 @@ public class MainAuctionGui extends PaginatedGui {
     }
 
     private void addCustomControls() {
-        // Create placeholder context for GUI-specific placeholders
-        PlaceholderContext context = new PlaceholderContext()
+        // ═══════════════════════════════════════════════════════════════════════
+        // GUI Control Bar Layout (Bottom Row - Slots 45-53):
+        // [45] Border | [46] Prev | [47] Sort | [48] Search | [49] Profile
+        // [50] MyListings | [51] Mailbox | [52] Next | [53] Border
+        // ═══════════════════════════════════════════════════════════════════════
+
+        // Sort Button (Slot 47)
+        PlaceholderContext sortContext = new PlaceholderContext()
             .addPlaceholder("sort_order", sortOrder.getDisplayName());
-
-        // Update sort button with current sort order
-        String sortName = kah.getConfigManager().getMessage("gui.control-items.sort", context);
+        String sortName = kah.getConfigManager().getMessage("gui.control-items.sort", sortContext);
         List<String> sortLore = new ArrayList<>();
-        sortLore.add("§7Current: §e" + sortOrder.getDisplayName());
-        sortLore.add("§7Click to cycle through options");
-        sortLore.add("§8Available:");
+        sortLore.add("");
+        sortLore.add("&#BDC3C7Current: &#ECF0F1" + sortOrder.getDisplayName());
+        sortLore.add("");
         for (com.minekarta.playerauction.gui.model.SortOrder order : com.minekarta.playerauction.gui.model.SortOrder.values()) {
-            sortLore.add("§8  • " + order.getDisplayName());
+            if (order == sortOrder) {
+                sortLore.add("&#2ECC71► " + order.getDisplayName());
+            } else {
+                sortLore.add("&#7F8C8D  " + order.getDisplayName());
+            }
         }
-        inventory.setItem(46, new GuiItemBuilder(Material.COMPARATOR).setName("§a" + sortName).setLore(sortLore).build());
+        sortLore.add("");
+        sortLore.add("&#F5A623Click to change");
+        inventory.setItem(47, new GuiItemBuilder(Material.COMPARATOR).setName(sortName).setLore(sortLore).build());
 
-        // Update search button with current search status
-        String searchName = kah.getConfigManager().getMessage("gui.control-items.search", context);
-        List<String> searchLore = new ArrayList<>();
-        String currentQuery = searchQuery != null ? searchQuery : "";
+        // Search Button (Slot 48)
         PlaceholderContext searchContext = new PlaceholderContext()
-            .addPlaceholder("query", currentQuery);
-
+            .addPlaceholder("query", searchQuery != null ? searchQuery : "None");
+        String searchName = kah.getConfigManager().getMessage("gui.control-items.search", searchContext);
+        List<String> searchLore = new ArrayList<>();
+        searchLore.add("");
         if (searchQuery != null && !searchQuery.isEmpty()) {
-            searchLore.add("§7Currently searching for:");
-            searchLore.add("§e\"" + searchQuery + "\"");
-            searchLore.add("§7Click to modify search");
+            searchLore.add("&#BDC3C7Searching for:");
+            searchLore.add("&#F1C40F\"" + searchQuery + "\"");
+            searchLore.add("");
+            searchLore.add("&#E67E22Click to modify");
+            searchLore.add("&#7F8C8DRight-click to clear");
         } else {
-            searchLore.add("§7Click to search for items");
-            searchLore.add("§8Type keywords to find");
+            searchLore.add("&#BDC3C7Find specific items");
+            searchLore.add("");
+            searchLore.add("&#3498DBClick to search");
         }
-        inventory.setItem(47, new GuiItemBuilder(Material.ENDER_EYE).setName("§a" + searchName).setLore(searchLore).build());
+        inventory.setItem(48, new GuiItemBuilder(Material.COMPASS).setName(searchName).setLore(searchLore).build());
+
+        // My Listings Button (Slot 50)
+        String myListingsName = kah.getConfigManager().getMessage("gui.control-items.my-listings", null);
+        kah.getAuctionService().getPlayerActiveAuctionCount(player.getUniqueId()).thenAccept(count -> {
+            int maxListings = kah.getConfigManager().getConfig().getInt("auction.max-auctions-per-player", 5);
+            List<String> myListingsLore = new ArrayList<>();
+            myListingsLore.add("");
+            myListingsLore.add("&#BDC3C7View your active auctions");
+            myListingsLore.add("");
+            myListingsLore.add("&#7F8C8DActive: &#ECF0F1" + count + "&#7F8C8D/&#ECF0F1" + maxListings);
+            myListingsLore.add("");
+            myListingsLore.add("&#E67E22Click to view");
+            plugin.getServer().getScheduler().runTask(plugin, () -> {
+                inventory.setItem(50, new GuiItemBuilder(Material.BOOK).setName(myListingsName).setLore(myListingsLore).build());
+            });
+        });
+
+        // Mailbox Button (Slot 51)
+        String mailboxName = kah.getConfigManager().getMessage("gui.control-items.mailbox", null);
+        List<String> mailboxLore = new ArrayList<>();
+        mailboxLore.add("");
+        mailboxLore.add("&#BDC3C7Check pending items & money");
+        mailboxLore.add("");
+        mailboxLore.add("&#2ECC71Click to open");
+        inventory.setItem(51, new GuiItemBuilder(Material.ENDER_CHEST).setName(mailboxName).setLore(mailboxLore).build());
     }
 
     private ItemStack createAuctionItem(Auction auction, double playerBalance) {
@@ -425,18 +462,25 @@ public class MainAuctionGui extends PaginatedGui {
             return;
         }
 
-        // Handle custom control clicks (these are the ones not handled by parent class)
-        if (slot == 46) { // Sort button
+        // Handle custom control clicks matching the slot layout:
+        // [47] Sort | [48] Search | [49] Profile | [50] MyListings | [51] Mailbox
+
+        if (slot == 47) { // Sort button
             SortOrder nextSortOrder = sortOrder.next();
             new MainAuctionGui(kah, player, 1, nextSortOrder, searchQuery).open();
-        } else if (slot == 47) { // Search button
-            // ✅ FIX: Use SearchManager to start search session
-            player.closeInventory();
-            kah.getSearchManager().startSearchSession(player, sortOrder);
-        } else if (slot == 51) { // Search button (alternative slot if needed)
-            // ✅ FIX: Same as slot 47
-            player.closeInventory();
-            kah.getSearchManager().startSearchSession(player, sortOrder);
+        } else if (slot == 48) { // Search button
+            if (event.isRightClick() && searchQuery != null && !searchQuery.isEmpty()) {
+                // Right-click to clear search
+                new MainAuctionGui(kah, player, 1, sortOrder, null).open();
+            } else {
+                // Left-click to start search session
+                player.closeInventory();
+                kah.getSearchManager().startSearchSession(player, sortOrder);
+            }
+        } else if (slot == 50) { // My Listings button
+            new MyListingsGui(kah, player, 1).open();
+        } else if (slot == 51) { // Mailbox button
+            new MailboxGui(kah, player, 1).open();
         }
     }
 

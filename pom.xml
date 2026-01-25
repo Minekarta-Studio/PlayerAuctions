@@ -17,7 +17,7 @@
         <minecraft.version>1.21</minecraft.version>
         <paper.version>1.21.8-R0.1-SNAPSHOT</paper.version>
         <if.version>0.11.5</if.version>
-        <plugin.version>2.4.0</plugin.version>
+        <plugin.version>2.5.0</plugin.version>
     </properties>
 
     <profiles>
@@ -31,7 +31,7 @@
                 <minecraft.version>1.21</minecraft.version>
                 <paper.version>1.21.8-R0.1-SNAPSHOT</paper.version>
                 <if.version>0.11.5</if.version>
-                <plugin.version>2.4.0</plugin.version>
+                <plugin.version>2.5.0</plugin.version>
                 <build.finalName>PlayerAuctions-${plugin.version}-Modern</build.finalName>
             </properties>
         </profile>

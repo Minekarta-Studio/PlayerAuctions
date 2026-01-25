@@ -101,11 +101,11 @@ public abstract class Gui implements InventoryHolder, Listener {
 
     protected CompletableFuture<ItemStack> createPlayerInfoItem() {
         if (!(plugin instanceof PlayerAuction kah)) {
-            // Fallback for safety, though it should always be a PlayerAuction instance
+            // Fallback for safety
             return CompletableFuture.completedFuture(
                 new GuiItemBuilder(Material.PLAYER_HEAD)
                     .setSkullOwner(player.getName())
-                    .setName("&e" + player.getName())
+                    .setName("&#F5A623" + player.getName())
                     .build()
             );
         }
@@ -113,39 +113,28 @@ public abstract class Gui implements InventoryHolder, Listener {
         return kah.getEconomyRouter().getService().getBalance(player.getUniqueId()).thenApply(balance -> {
             String formattedBalance = kah.getEconomyRouter().getService().format(balance);
 
-            // Create placeholder context for player info
-            com.minekarta.playerauction.util.PlaceholderContext context = new com.minekarta.playerauction.util.PlaceholderContext()
-                .addPlaceholder("player_name", player.getName())
-                .addPlaceholder("balance", formattedBalance);
+            // Build complete player profile lore with modern hex colors
+            java.util.List<String> lore = new java.util.ArrayList<>();
+            lore.add("");
+            lore.add("&#2C3E50━━━━━━━━━━━━━━━━━━━━━");
+            lore.add("&#7F8C8D       ᴘʟᴀʏᴇʀ sᴛᴀᴛs");
+            lore.add("&#2C3E50━━━━━━━━━━━━━━━━━━━━━");
+            lore.add("");
+            lore.add("&#7F8C8DBalance    &#2ECC71" + formattedBalance);
 
             // Add page info if this is a paginated GUI
             if (this instanceof PaginatedGui paginatedGui) {
-                context.addPlaceholder("page", paginatedGui.page);
-
-                // For now, we'll set total pages to "?" and it will be updated later in the specific GUIs
-                context.addPlaceholder("total_pages", "?");
+                lore.add("&#7F8C8DPage       &#ECF0F1" + paginatedGui.page);
             }
 
-            // Get the player info lines from config using placeholders
-            java.util.List<String> rawLines = kah.getConfigManager().getMessages().getStringList("gui.control-items.player-info");
-            java.util.List<String> processedLines = new java.util.ArrayList<>();
+            lore.add("");
+            lore.add("&#2C3E50━━━━━━━━━━━━━━━━━━━━━");
 
-            for (String line : rawLines) {
-                String processedLine = context.applyTo(line);
-                processedLines.add(processedLine);
-            }
-
-            // Extract the name and lore from the processed lines
-            String itemName = processedLines.size() > 0 ? processedLines.get(0) : "&e" + player.getName();
-            String balanceLine = processedLines.size() > 1 ? processedLines.get(1) : "&7Balance: &e" + formattedBalance;
-            String pageLine = processedLines.size() > 2 ? processedLines.get(2) : "&7Page: &e" + (this instanceof PaginatedGui ? ((PaginatedGui) this).page : "1");
-
-            GuiItemBuilder builder = new GuiItemBuilder(Material.PLAYER_HEAD)
+            return new GuiItemBuilder(Material.PLAYER_HEAD)
                 .setSkullOwner(player.getName())
-                .setName(itemName)
-                .setLore(balanceLine, pageLine);
-
-            return builder.build();
+                .setName("&#F5A623" + player.getName())
+                .setLore(lore)
+                .build();
         });
     }
 }

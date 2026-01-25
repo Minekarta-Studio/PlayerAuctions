@@ -80,17 +80,8 @@ public abstract class PaginatedGui extends Gui {
                 .build());
         }
 
-        // Sort Button (Slot 47) - Left side
-        PlaceholderContext sortContext = new PlaceholderContext()
-            .addPlaceholder("sort_order", getCurrentSortOrder());
-        String sortName = ((com.minekarta.playerauction.PlayerAuction) plugin).getConfigManager().getMessage("gui.control-items.sort", sortContext);
-        String sortLore = ((com.minekarta.playerauction.PlayerAuction) plugin).getConfigManager().getMessage("gui.control-items.sort-lore", sortContext)
-            .replace("[", "").replace("]", "").replace(",", "\n"); // Convert list format to newlines
-
-        inventory.setItem(47, new GuiItemBuilder(Material.COMPARATOR)
-            .setName(sortName)
-            .setLore(sortLore.split("\n"))
-            .build());
+        // NOTE: Sort button (Slot 47) is handled by MainAuctionGui.addCustomControls()
+        // to allow subclass-specific control layouts
 
         // Player Info Item (Slot 49) - Center position
         createPlayerInfoItem().thenAccept(item -> {
@@ -147,36 +138,39 @@ public abstract class PaginatedGui extends Gui {
     protected abstract void openPage(int newPage);
 
     /**
-     * Updates the player info item with the correct total pages
+     * Updates the player info item with complete statistics including balance
      */
     protected void updatePlayerInfoItem(int totalPages) {
-        // Create placeholder context for player info with correct total pages
-        com.minekarta.playerauction.util.PlaceholderContext context = new com.minekarta.playerauction.util.PlaceholderContext()
-            .addPlaceholder("player_name", player.getName())
-            .addPlaceholder("balance", "0") // We don't have the balance here, but it's not used in the name anyway)
-            .addPlaceholder("page", page)
-            .addPlaceholder("total_pages", totalPages);
-
-        // Get the player info lines from config using placeholders
-        java.util.List<String> rawLines = ((com.minekarta.playerauction.PlayerAuction) plugin).getConfigManager().getMessages().getStringList("gui.control-items.player-info");
-        java.util.List<String> processedLines = new java.util.ArrayList<>();
-
-        for (String line : rawLines) {
-            String processedLine = context.applyTo(line);
-            processedLines.add(processedLine);
+        if (!(plugin instanceof com.minekarta.playerauction.PlayerAuction kah)) {
+            return;
         }
 
-        // Extract the name and lore from the processed lines
-        String itemName = processedLines.size() > 0 ? processedLines.get(0) : "&e" + player.getName();
-        String balanceLine = processedLines.size() > 1 ? processedLines.get(1) : "&7Balance: &e0";
-        String pageLine = processedLines.size() > 2 ? processedLines.get(2) : "&7Page: &e" + page + "/" + totalPages;
+        // Fetch balance asynchronously for accurate display
+        kah.getEconomyRouter().getService().getBalance(player.getUniqueId()).thenAccept(balance -> {
+            String formattedBalance = kah.getEconomyRouter().getService().format(balance);
 
-        ItemStack playerInfoItem = new GuiItemBuilder(org.bukkit.Material.PLAYER_HEAD)
-            .setSkullOwner(player.getName())
-            .setName(itemName)
-            .setLore(balanceLine, pageLine)
-            .build();
+            // Build complete player profile lore with modern hex colors
+            java.util.List<String> lore = new java.util.ArrayList<>();
+            lore.add("");
+            lore.add("&#2C3E50━━━━━━━━━━━━━━━━━━━━━");
+            lore.add("&#7F8C8D       ᴘʟᴀʏᴇʀ sᴛᴀᴛs");
+            lore.add("&#2C3E50━━━━━━━━━━━━━━━━━━━━━");
+            lore.add("");
+            lore.add("&#7F8C8DBalance    &#2ECC71" + formattedBalance);
+            lore.add("&#7F8C8DPage       &#ECF0F1" + page + "&#7F8C8D/&#ECF0F1" + totalPages);
+            lore.add("");
+            lore.add("&#2C3E50━━━━━━━━━━━━━━━━━━━━━");
 
-        inventory.setItem(49, playerInfoItem);
+            ItemStack playerInfoItem = new GuiItemBuilder(org.bukkit.Material.PLAYER_HEAD)
+                .setSkullOwner(player.getName())
+                .setName("&#F5A623" + player.getName())
+                .setLore(lore)
+                .build();
+
+            // Update on main thread
+            plugin.getServer().getScheduler().runTask(plugin, () -> {
+                inventory.setItem(49, playerInfoItem);
+            });
+        });
     }
 }
