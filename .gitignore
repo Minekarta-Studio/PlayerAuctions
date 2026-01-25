@@ -29,3 +29,7 @@ Thumbs.db
 build/
 out/
 dist/
+
+# Development documentation (internal only)
+QWEN.md
+
