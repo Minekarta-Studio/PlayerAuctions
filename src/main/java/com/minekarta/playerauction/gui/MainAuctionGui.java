@@ -187,35 +187,113 @@ public class MainAuctionGui extends PaginatedGui {
             ? item.getItemMeta().getDisplayName()
             : formatItemName(item.getType().toString());
 
+        // Get seller name
+        String sellerName = kah.getPlayerNameCache().getName(auction.seller()).join();
+
+        // Check if this is player's own auction
+        boolean isOwnAuction = player.getUniqueId().equals(auction.seller());
+
+        // Economy service for formatting
+        var economyService = kah.getEconomyRouter().getService();
+
         // Create placeholder context for auction-specific information
         PlaceholderContext context = new PlaceholderContext()
-            .addPlaceholder("seller", kah.getPlayerNameCache().getName(auction.seller()).join())
+            .addPlaceholder("seller", sellerName)
             .addPlaceholder("item_name", itemDisplayName)
-            .addPlaceholder("starting_price", kah.getEconomyRouter().getService().format(auction.price()))
-            .addPlaceholder("current_bid", kah.getEconomyRouter().getService().format(auction.price()))
-            .addPlaceholder("buy_now_price", auction.buyNowPrice() != null ?
-                kah.getEconomyRouter().getService().format(auction.buyNowPrice()) : "N/A")
-            .addPlaceholder("reserve_price", auction.reservePrice() != null ?
-                kah.getEconomyRouter().getService().format(auction.reservePrice()) : "N/A");
+            .addPlaceholder("quantity", String.valueOf(item.getAmount()));
 
-        // Time left
+        // ═══════════════════════════════════════════════
+        // PRICING INFORMATION
+        // ═══════════════════════════════════════════════
+
+        // Starting price (initial bid)
+        context.addPlaceholder("starting_price", economyService.format(auction.price()));
+
+        // Current bid (for now same as starting price, can be enhanced with bid tracking)
+        // TODO: When bid system is fully implemented, this should show actual current highest bid
+        context.addPlaceholder("current_bid", economyService.format(auction.price()));
+
+        // Buy Now price with visual indicator
+        if (auction.buyNowPrice() != null) {
+            context.addPlaceholder("buy_now_price", economyService.format(auction.buyNowPrice()));
+            context.addPlaceholder("buy_now_display", "&#2ECC71" + economyService.format(auction.buyNowPrice()));
+        } else {
+            context.addPlaceholder("buy_now_price", "N/A");
+            context.addPlaceholder("buy_now_display", "&#7F8C8D—");
+        }
+
+        // Reserve price with visual indicator
+        if (auction.reservePrice() != null) {
+            context.addPlaceholder("reserve_price", economyService.format(auction.reservePrice()));
+            context.addPlaceholder("reserve_display", "&#E67E22" + economyService.format(auction.reservePrice()));
+        } else {
+            context.addPlaceholder("reserve_price", "N/A");
+            context.addPlaceholder("reserve_display", "&#7F8C8D—");
+        }
+
+        // ═══════════════════════════════════════════════
+        // BID STATISTICS
+        // ═══════════════════════════════════════════════
+
+        // TODO: These can be enhanced when bid tracking is fully implemented
+        context.addPlaceholder("bid_count", "0"); // Placeholder for bid count
+        context.addPlaceholder("highest_bidder", "—"); // Placeholder for highest bidder name
+
+        // ═══════════════════════════════════════════════
+        // TIME INFORMATION
+        // ═══════════════════════════════════════════════
+
+        // Time left with color coding
         long timeLeft = auction.endAt() - System.currentTimeMillis();
         String timeStr = TimeUtil.formatDuration(timeLeft);
+        String timeColor;
+        if (timeLeft <= 0) {
+            timeColor = "&#E74C3C"; // Coral Red - expired
+        } else if (timeLeft < 60 * 60 * 1000) { // Less than 1 hour
+            timeColor = "&#E74C3C"; // Coral Red - urgent
+        } else if (timeLeft < 24 * 60 * 60 * 1000) { // Less than 24 hours
+            timeColor = "&#E67E22"; // Carrot - warning
+        } else {
+            timeColor = "&#2ECC71"; // Emerald - plenty of time
+        }
         context.addPlaceholder("time_left", timeStr);
-        context.addPlaceholder("duration", TimeUtil.formatDuration(auction.endAt() - auction.createdAt()));
+        context.addPlaceholder("time_color", timeColor);
 
-        // Status information
+        // Total duration
+        long totalDuration = auction.endAt() - auction.createdAt();
+        context.addPlaceholder("duration", TimeUtil.formatDuration(totalDuration));
+
+        // Listed date (when the auction was created)
+        java.text.SimpleDateFormat dateFormat = new java.text.SimpleDateFormat("MMM dd, HH:mm");
+        String listedDate = dateFormat.format(new java.util.Date(auction.createdAt()));
+        context.addPlaceholder("listed_date", listedDate);
+
+        // ═══════════════════════════════════════════════
+        // STATUS INFORMATION
+        // ═══════════════════════════════════════════════
+
         context.addPlaceholder("status", getStatusText(auction.status()));
         context.addPlaceholder("status_color", getStatusColor(auction.status()));
 
-        // Price with affordability info
-        double price = auction.price();
-        String formattedPrice = kah.getEconomyRouter().getService().format(price);
-        context.addPlaceholder("price", formattedPrice);
-        context.addPlaceholder("affordable_text", playerBalance >= price ?
+        // ═══════════════════════════════════════════════
+        // AFFORDABILITY & ACTION CONTEXT
+        // ═══════════════════════════════════════════════
+
+        double effectivePrice = auction.buyNowPrice() != null ? auction.buyNowPrice() : auction.price();
+        context.addPlaceholder("price", economyService.format(effectivePrice));
+
+        boolean canAfford = playerBalance >= effectivePrice;
+        context.addPlaceholder("affordable_text", canAfford ?
             "You can afford this item" : "Need more money to purchase");
 
-        // ✅ FIX: Build lore using String with hex colors (not Component - item lore doesn't support gradients)
+        double neededAmount = effectivePrice - playerBalance;
+        context.addPlaceholder("needed_amount", neededAmount > 0 ?
+            economyService.format(neededAmount) : economyService.format(0));
+
+        // ═══════════════════════════════════════════════
+        // BUILD LORE
+        // ═══════════════════════════════════════════════
+
         List<String> lore = new ArrayList<>();
 
         // Get lore template from messages.yml
@@ -226,15 +304,23 @@ public class MainAuctionGui extends PaginatedGui {
             lore.add(processed);
         }
 
-        // Add action buttons
+        // Add action buttons based on context
         lore.add("");
-        if (playerBalance >= price) {
+
+        if (isOwnAuction) {
+            // Player's own auction - show manage option
+            String actionMsg = kah.getConfigManager().getMessage("gui.item-action.own-auction", context);
+            for (String line : actionMsg.split("\n")) {
+                lore.add(line);
+            }
+        } else if (canAfford) {
+            // Can afford - show purchase options
             String actionMsg = kah.getConfigManager().getMessage("gui.item-action.can-purchase", context);
-            // Handle multi-line action buttons (split by \n)
             for (String line : actionMsg.split("\n")) {
                 lore.add(line);
             }
         } else {
+            // Cannot afford - show insufficient funds
             String actionMsg = kah.getConfigManager().getMessage("gui.item-action.insufficient-funds", context);
             for (String line : actionMsg.split("\n")) {
                 lore.add(line);

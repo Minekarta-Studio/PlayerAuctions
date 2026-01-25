@@ -124,114 +124,165 @@ public class MyListingsGui extends PaginatedGui {
         ItemStack item = auction.item().toItemStack();
         GuiItemBuilder builder = new GuiItemBuilder(item);
 
-        // Create placeholder context for auction-specific information
-        com.minekarta.playerauction.util.PlaceholderContext context = new com.minekarta.playerauction.util.PlaceholderContext()
-            .addPlaceholder("item_name", item.hasItemMeta() && item.getItemMeta().hasDisplayName()
-                ? item.getItemMeta().getDisplayName()
-                : item.getType().toString().replace("_", " ").toLowerCase())
-            .addPlaceholder("starting_price", kah.getEconomyRouter().getService().format(auction.price()))
-            .addPlaceholder("current_bid", kah.getEconomyRouter().getService().format(auction.price())) // Using price as current bid for now
-            .addPlaceholder("buy_now_price", auction.buyNowPrice() != null ? kah.getEconomyRouter().getService().format(auction.buyNowPrice()) : "N/A")
-            .addPlaceholder("reserve_price", auction.reservePrice() != null ? kah.getEconomyRouter().getService().format(auction.reservePrice()) : "N/A");
+        // Get clean item display name
+        String itemDisplayName = item.hasItemMeta() && item.getItemMeta().hasDisplayName()
+            ? item.getItemMeta().getDisplayName()
+            : formatItemName(item.getType().toString());
 
-        // Time left for active auctions
+        // Economy service
+        var economyService = kah.getEconomyRouter().getService();
+
+        // Create placeholder context with complete statistics
+        com.minekarta.playerauction.util.PlaceholderContext context = new com.minekarta.playerauction.util.PlaceholderContext()
+            .addPlaceholder("item_name", itemDisplayName)
+            .addPlaceholder("quantity", String.valueOf(item.getAmount()));
+
+        // ═══════════════════════════════════════════════
+        // PRICING INFORMATION
+        // ═══════════════════════════════════════════════
+
+        context.addPlaceholder("starting_price", economyService.format(auction.price()));
+        context.addPlaceholder("current_bid", economyService.format(auction.price()));
+
+        // Buy Now price with visual indicator
+        if (auction.buyNowPrice() != null) {
+            context.addPlaceholder("buy_now_price", economyService.format(auction.buyNowPrice()));
+            context.addPlaceholder("buy_now_display", "&#2ECC71" + economyService.format(auction.buyNowPrice()));
+        } else {
+            context.addPlaceholder("buy_now_price", "N/A");
+            context.addPlaceholder("buy_now_display", "&#7F8C8D—");
+        }
+
+        // Reserve price with visual indicator
+        if (auction.reservePrice() != null) {
+            context.addPlaceholder("reserve_price", economyService.format(auction.reservePrice()));
+            context.addPlaceholder("reserve_display", "&#E67E22" + economyService.format(auction.reservePrice()));
+        } else {
+            context.addPlaceholder("reserve_price", "N/A");
+            context.addPlaceholder("reserve_display", "&#7F8C8D—");
+        }
+
+        // ═══════════════════════════════════════════════
+        // TIME INFORMATION
+        // ═══════════════════════════════════════════════
+
         long timeLeft = auction.endAt() - System.currentTimeMillis();
         String timeStr = TimeUtil.formatDuration(timeLeft);
         String timeColor;
-        if (timeLeft > 24 * 60 * 60 * 1000) { // More than 1 day
-            timeColor = "&a";
-        } else if (timeLeft > 60 * 60 * 1000) { // More than 1 hour
-            timeColor = "&e";
-        } else { // Less than 1 hour
-            timeColor = "&c";
+        if (timeLeft <= 0) {
+            timeColor = "&#E74C3C"; // Coral Red - expired
+        } else if (timeLeft < 60 * 60 * 1000) { // Less than 1 hour
+            timeColor = "&#E74C3C"; // Coral Red - urgent
+        } else if (timeLeft < 24 * 60 * 60 * 1000) { // Less than 24 hours
+            timeColor = "&#E67E22"; // Carrot - warning
+        } else {
+            timeColor = "&#2ECC71"; // Emerald - plenty of time
         }
         context.addPlaceholder("time_left", timeStr);
+        context.addPlaceholder("time_color", timeColor);
 
-        // Status information with modern hex colors
+        // Duration and listed date
+        context.addPlaceholder("duration", TimeUtil.formatDuration(auction.endAt() - auction.createdAt()));
+        java.text.SimpleDateFormat dateFormat = new java.text.SimpleDateFormat("MMM dd, HH:mm");
+        context.addPlaceholder("listed_date", dateFormat.format(new java.util.Date(auction.createdAt())));
+
+        // ═══════════════════════════════════════════════
+        // BID STATISTICS
+        // ═══════════════════════════════════════════════
+
+        context.addPlaceholder("bid_count", "0"); // TODO: implement bid tracking
+        context.addPlaceholder("highest_bidder", "—");
+
+        // ═══════════════════════════════════════════════
+        // STATUS INFORMATION
+        // ═══════════════════════════════════════════════
+
         String statusText;
         String statusColor;
         switch (auction.status()) {
             case ACTIVE:
                 statusColor = "&#2ECC71"; // Emerald
-                statusText = "ACTIVE";
+                statusText = "ᴀᴄᴛɪᴠᴇ";
                 break;
             case FINISHED:
                 statusColor = "&#F5A623"; // Amber Gold
-                statusText = "SOLD";
+                statusText = "sᴏʟᴅ";
                 break;
             case CANCELLED:
                 statusColor = "&#7F8C8D"; // Slate Gray
-                statusText = "CANCELLED";
+                statusText = "ᴄᴀɴᴄᴇʟʟᴇᴅ";
                 break;
             case EXPIRED:
                 statusColor = "&#E74C3C"; // Coral Red
-                statusText = "EXPIRED";
+                statusText = "ᴇxᴘɪʀᴇᴅ";
                 break;
             default:
                 statusColor = "&#BDC3C7"; // Silver
-                statusText = auction.status().name();
+                statusText = auction.status().name().toLowerCase();
                 break;
         }
         context.addPlaceholder("status", statusText);
         context.addPlaceholder("status_color", statusColor);
 
-        // Additional item details
-        context.addPlaceholder("duration", TimeUtil.formatDuration(auction.endAt() - auction.createdAt()));
-        context.addPlaceholder("bidder_count", "0"); // Assuming no bidders for simplicity
+        // ═══════════════════════════════════════════════
+        // BUILD LORE
+        // ═══════════════════════════════════════════════
 
-        // Create lore using the message system with placeholders
         List<String> lore = new ArrayList<>();
 
-        // Add header information
-        lore.add("&8━━━━━━━━━━━━━━━━━━━━━━━━━━");
-        lore.add("&f" + item.getType().toString().replace("_", " ").toLowerCase());
-        lore.add("&8━━━━━━━━━━━━━━━━━━━━━━━━━━");
-        lore.add("");
-
-        // Get the item lore template from config and apply placeholders
+        // Get the item lore template from config
         java.util.List<String> rawLore = kah.getConfigManager().getMessages().getStringList("gui.my-listings-lore");
         for (String loreLine : rawLore) {
-            // Apply the context to each lore line
-            String processedLine = context.applyTo(loreLine);
-            // Apply time color specifically to the time line
-            if (processedLine.contains("{time_left}")) {
-                processedLine = processedLine.replace("{time_left}", timeColor + timeStr);
-            }
+            String processedLine = kah.getConfigManager().processMessage(loreLine, context);
             lore.add(processedLine);
         }
 
-        // Additional item details
-        if (item.getAmount() > 1) {
-            lore.add("&7➤ &6Quantity: &e" + item.getAmount());
-        }
-
+        // Add action buttons based on status
         lore.add("");
-        lore.add("&8━━━━━━━━━━━━━━━━━━━━━━━━━━");
-
-        // Action buttons based on status
         if (auction.status() == AuctionStatus.ACTIVE) {
-            lore.add("&c&l▶ CLICK TO CANCEL LISTING");
-            lore.add("&7Remove this item from the auction house");
-            lore.add("&8Item will be returned to your inventory");
+            lore.add("&#E74C3C▶ ᴄʟɪᴄᴋ ᴛᴏ ᴄᴀɴᴄᴇʟ");
+            lore.add("&#7F8C8DItem will be returned to mailbox");
         } else {
-            lore.add("&7&l▶ LISTING " + statusText);
+            lore.add("&#7F8C8D○ " + statusText.toUpperCase());
             switch (auction.status()) {
                 case FINISHED:
-                    lore.add("&7Item was sold to another player");
+                    lore.add("&#7F8C8DSold to another player");
                     break;
                 case CANCELLED:
-                    lore.add("&7You cancelled this listing");
+                    lore.add("&#7F8C8DYou cancelled this listing");
                     break;
                 case EXPIRED:
-                    lore.add("&7Listing expired without sale");
+                    lore.add("&#7F8C8DExpired without sale");
                     break;
                 default:
-                    lore.add("&7This listing cannot be modified");
+                    lore.add("&#7F8C8DCannot be modified");
                     break;
             }
         }
 
         return builder.setLore(lore).build();
+    }
+
+    /**
+     * Format item type name to be more readable.
+     * Example: DIAMOND_SWORD -> Diamond Sword
+     */
+    private String formatItemName(String typeName) {
+        if (typeName == null || typeName.isEmpty()) {
+            return "Unknown Item";
+        }
+        String[] parts = typeName.toLowerCase().split("_");
+        StringBuilder formatted = new StringBuilder();
+        for (int i = 0; i < parts.length; i++) {
+            if (i > 0) formatted.append(" ");
+            if (parts[i].length() > 0) {
+                formatted.append(Character.toUpperCase(parts[i].charAt(0)));
+                if (parts[i].length() > 1) {
+                    formatted.append(parts[i].substring(1));
+                }
+            }
+        }
+        return formatted.toString();
     }
 
     @Override
