@@ -51,5 +51,5 @@ gui:
     lore: []
 
 # --- Database Settings ---
-# Plugin now uses SQLite database located in plugin data folder
+# Plugin now uses JSON files located in plugin data folder
 # No database configuration required

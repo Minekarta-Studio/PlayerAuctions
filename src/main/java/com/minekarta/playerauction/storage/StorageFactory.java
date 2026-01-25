@@ -1,16 +1,16 @@
 package com.minekarta.playerauction.storage;
 
-import com.minekarta.playerauction.storage.sqlite.SQLiteAuctionStorage;
-import com.minekarta.playerauction.storage.sqlite.SQLiteTransactionStorage;
+import com.minekarta.playerauction.storage.json.JsonAuctionStorage;
+import com.minekarta.playerauction.storage.json.JsonTransactionStorage;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class StorageFactory {
 
     public static AuctionStorage createAuctionStorage(JavaPlugin plugin) {
-        return new SQLiteAuctionStorage(plugin);
+        return new JsonAuctionStorage(plugin);
     }
 
     public static TransactionStorage createTransactionStorage(JavaPlugin plugin) {
-        return new SQLiteTransactionStorage(plugin);
+        return new JsonTransactionStorage(plugin);
     }
 }

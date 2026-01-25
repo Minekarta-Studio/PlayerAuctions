@@ -79,14 +79,38 @@ public abstract class Gui implements InventoryHolder, Listener {
 
         return kah.getEconomyRouter().getService().getBalance(player.getUniqueId()).thenApply(balance -> {
             String formattedBalance = kah.getEconomyRouter().getService().format(balance);
+
+            // Create placeholder context for player info
+            com.minekarta.playerauction.util.PlaceholderContext context = new com.minekarta.playerauction.util.PlaceholderContext()
+                .addPlaceholder("player_name", player.getName())
+                .addPlaceholder("balance", formattedBalance);
+
+            // Add page info if this is a paginated GUI
+            if (this instanceof PaginatedGui paginatedGui) {
+                context.addPlaceholder("page", paginatedGui.page);
+
+                // For now, we'll set total pages to "?" and it will be updated later in the specific GUIs
+                context.addPlaceholder("total_pages", "?");
+            }
+
+            // Get the player info lines from config using placeholders
+            java.util.List<String> rawLines = kah.getConfigManager().getMessages().getStringList("gui.control-items.player-info");
+            java.util.List<String> processedLines = new java.util.ArrayList<>();
+
+            for (String line : rawLines) {
+                String processedLine = context.applyTo(line);
+                processedLines.add(processedLine);
+            }
+
+            // Extract the name and lore from the processed lines
+            String itemName = processedLines.size() > 0 ? processedLines.get(0) : "&e" + player.getName();
+            String balanceLine = processedLines.size() > 1 ? processedLines.get(1) : "&7Balance: &e" + formattedBalance;
+            String pageLine = processedLines.size() > 2 ? processedLines.get(2) : "&7Page: &e" + (this instanceof PaginatedGui ? ((PaginatedGui) this).page : "1");
+
             GuiItemBuilder builder = new GuiItemBuilder(Material.PLAYER_HEAD)
                 .setSkullOwner(player.getName())
-                .setName("&a" + player.getName())
-                .setLore("&7Balance: &e" + formattedBalance);
-
-            if (this instanceof PaginatedGui paginatedGui) {
-                builder.addLore("&7Page: &e" + paginatedGui.page);
-            }
+                .setName(itemName)
+                .setLore(balanceLine, pageLine);
 
             return builder.build();
         });

@@ -31,12 +31,18 @@ public class NotificationManager {
         }
 
         List<String> methods = configManager.getConfig().getStringList("auction.notification-methods");
-        String message = configManager.getMessage(messageKey);
 
-        // Replace custom placeholders
+        // Create placeholder context and add the provided placeholders
+        com.minekarta.playerauction.util.PlaceholderContext context = new com.minekarta.playerauction.util.PlaceholderContext();
         for (Map.Entry<String, String> entry : placeholders.entrySet()) {
-            message = message.replace(entry.getKey(), entry.getValue());
+            // Handle both %placeholder% and {placeholder} formats
+            String key = entry.getKey();
+            // Remove percent signs or curly braces to get the base key
+            String cleanKey = key.replace("%", "").replace("{", "").replace("}", "");
+            context.addPlaceholder(cleanKey, entry.getValue());
         }
+
+        String message = configManager.getMessage(messageKey, context);
 
         // Apply PlaceholderAPI placeholders
         if (placeholderApiEnabled) {

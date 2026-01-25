@@ -9,6 +9,7 @@ import com.minekarta.playerauction.storage.AuctionStorage;
 import com.minekarta.playerauction.storage.StorageFactory;
 import com.minekarta.playerauction.tasks.AuctionExpirer;
 import com.minekarta.playerauction.util.PlayerNameCache;
+import com.minekarta.playerauction.util.SearchManager;
 import com.minekarta.playerauction.notification.NotificationManager;
 import com.minekarta.playerauction.transaction.TransactionLogger;
 import com.minekarta.playerauction.storage.TransactionStorage;
@@ -29,6 +30,7 @@ public class PlayerAuction extends JavaPlugin {
     private NotificationManager notificationManager;
     private TransactionLogger transactionLogger;
     private PlayerSettingsService playerSettingsService;
+    private SearchManager searchManager;
 
     @Override
     public void onEnable() {
@@ -46,11 +48,11 @@ public class PlayerAuction extends JavaPlugin {
             new ThreadFactoryBuilder().setNameFormat("PlayerAuction-Worker-%d").build()
         );
 
-        // 3. Initialize SQLite Database
+        // 3. Initialize JSON Storage
         AuctionStorage auctionStorage = StorageFactory.createAuctionStorage(this);
         TransactionStorage transactionStorage = StorageFactory.createTransactionStorage(this);
 
-        // Run table creation async
+        // Initialize storage async
         asyncExecutor.submit(() -> {
             auctionStorage.init();
             transactionStorage.init();
@@ -83,11 +85,20 @@ public class PlayerAuction extends JavaPlugin {
         // 7. Start Tasks
         new AuctionExpirer(auctionService).runTaskTimerAsynchronously(this, 20 * 30, 20 * 30); // Every 30 seconds
 
+        // 8. Initialize Search Manager
+        this.searchManager = new SearchManager(this);
+        getLogger().info("SearchManager initialized");
+
         getLogger().info("PlayerAuctions has been enabled!");
     }
 
     @Override
     public void onDisable() {
+        // Cleanup search sessions
+        if (searchManager != null) {
+            searchManager.clearAllSessions();
+        }
+
         if (asyncExecutor != null) {
             asyncExecutor.shutdownNow();
         }
@@ -103,4 +114,5 @@ public class PlayerAuction extends JavaPlugin {
     public TransactionLogger getTransactionLogger() { return transactionLogger; }
     public PlayerSettingsService getPlayerSettingsService() { return playerSettingsService; }
     public ExecutorService getAsyncExecutor() { return asyncExecutor; }
+    public SearchManager getSearchManager() { return searchManager; }
 }

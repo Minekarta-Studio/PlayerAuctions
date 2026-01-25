@@ -247,6 +247,10 @@ public class AuctionService {
         return auctionStorage.countActiveAuctionsByPlayer(playerId);
     }
 
+    public CompletableFuture<Integer> getTotalActiveAuctionCount() {
+        return auctionStorage.countAllActiveAuctions();
+    }
+
     // Public getters for fields needed by other classes
     public ConfigManager getConfigManager() { return configManager; }
     public EconomyRouter getEconomyRouter() { return economyRouter; }

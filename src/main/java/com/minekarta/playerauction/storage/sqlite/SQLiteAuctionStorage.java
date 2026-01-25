@@ -208,6 +208,23 @@ public class SQLiteAuctionStorage implements AuctionStorage {
     }
 
     @Override
+    public CompletableFuture<Integer> countAllActiveAuctions() {
+        return CompletableFuture.supplyAsync(() -> {
+            try (Connection conn = getConnection();
+                 PreparedStatement ps = conn.prepareStatement(COUNT_ALL_ACTIVE)) {
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getInt(1);
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            return 0;
+        }, executor);
+    }
+
+    @Override
     public CompletableFuture<Void> insertAuction(Auction a) {
         return CompletableFuture.runAsync(() -> {
             try (Connection conn = getConnection();
@@ -321,6 +338,7 @@ public class SQLiteAuctionStorage implements AuctionStorage {
     private static final String CREATE_AUCTIONS_INDEX = "CREATE INDEX IF NOT EXISTS idx_auctions_active ON auctions (status, end_at);";
 
     private static final String INSERT_AUCTION = "INSERT INTO auctions (auction_id, seller_uuid, item_base64, item_type, item_name, price, buy_now_price, reserve_price, created_at, end_at, status, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+    private static final String COUNT_ALL_ACTIVE = "SELECT COUNT(*) FROM auctions WHERE status = 'ACTIVE';";
     private static final String FIND_BY_ID = "SELECT * FROM auctions WHERE auction_id = ?;";
     private static final String FIND_BY_SELLER = "SELECT * FROM auctions WHERE seller_uuid = ? ORDER BY created_at DESC LIMIT ? OFFSET ?;";
     private static final String FIND_PLAYER_HISTORY = "SELECT * FROM auctions WHERE seller_uuid = ? AND status != 'ACTIVE' ORDER BY created_at DESC LIMIT ? OFFSET ?;";

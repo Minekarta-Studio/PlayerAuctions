@@ -3,6 +3,7 @@ package com.minekarta.playerauction.gui;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import com.minekarta.playerauction.PlayerAuction;
+import com.minekarta.playerauction.util.PlaceholderContext;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -67,16 +68,28 @@ public abstract class PaginatedGui extends Gui {
         // Clean layout with essential controls only
         // Previous Page Button (Slot 46) - Left side
         if (page > 1) {
+            PlaceholderContext prevPageContext = new PlaceholderContext()
+                .addPlaceholder("current_page", page - 1);
+            String prevPageName = ((com.minekarta.playerauction.PlayerAuction) plugin).getConfigManager().getMessage("gui.control-items.previous-page", prevPageContext);
+            String prevPageLore = ((com.minekarta.playerauction.PlayerAuction) plugin).getConfigManager().getMessage("gui.control-items.previous-page-lore", prevPageContext)
+                .replace("[", "").replace("]", "").replace(",", "\n"); // Convert list format to newlines
+
             inventory.setItem(46, new GuiItemBuilder(Material.ARROW)
-                .setName("§ePrevious Page")
-                .setLore("§7Page " + (page - 1))
+                .setName(prevPageName)
+                .setLore(prevPageLore.split("\n"))
                 .build());
         }
 
         // Sort Button (Slot 47) - Left side
+        PlaceholderContext sortContext = new PlaceholderContext()
+            .addPlaceholder("sort_order", getCurrentSortOrder());
+        String sortName = ((com.minekarta.playerauction.PlayerAuction) plugin).getConfigManager().getMessage("gui.control-items.sort", sortContext);
+        String sortLore = ((com.minekarta.playerauction.PlayerAuction) plugin).getConfigManager().getMessage("gui.control-items.sort-lore", sortContext)
+            .replace("[", "").replace("]", "").replace(",", "\n"); // Convert list format to newlines
+
         inventory.setItem(47, new GuiItemBuilder(Material.COMPARATOR)
-            .setName("§aSort: §f" + getCurrentSortOrder())
-            .setLore("§7Click to change", "§8Newest → Oldest → Price")
+            .setName(sortName)
+            .setLore(sortLore.split("\n"))
             .build());
 
         // Player Info Item (Slot 49) - Center position
@@ -93,9 +106,15 @@ public abstract class PaginatedGui extends Gui {
 
         // Next Page Button (Slot 52) - Right side
         if (hasNextPage) {
+            PlaceholderContext nextPageContext = new PlaceholderContext()
+                .addPlaceholder("current_page", page + 1);
+            String nextPageName = ((com.minekarta.playerauction.PlayerAuction) plugin).getConfigManager().getMessage("gui.control-items.next-page", nextPageContext);
+            String nextPageLore = ((com.minekarta.playerauction.PlayerAuction) plugin).getConfigManager().getMessage("gui.control-items.next-page-lore", nextPageContext)
+                .replace("[", "").replace("]", "").replace(",", "\n"); // Convert list format to newlines
+
             inventory.setItem(52, new GuiItemBuilder(Material.ARROW)
-                .setName("§eNext Page")
-                .setLore("§7Page " + (page + 1))
+                .setName(nextPageName)
+                .setLore(nextPageLore.split("\n"))
                 .build());
         }
     }
@@ -126,4 +145,38 @@ public abstract class PaginatedGui extends Gui {
     }
 
     protected abstract void openPage(int newPage);
+
+    /**
+     * Updates the player info item with the correct total pages
+     */
+    protected void updatePlayerInfoItem(int totalPages) {
+        // Create placeholder context for player info with correct total pages
+        com.minekarta.playerauction.util.PlaceholderContext context = new com.minekarta.playerauction.util.PlaceholderContext()
+            .addPlaceholder("player_name", player.getName())
+            .addPlaceholder("balance", "0") // We don't have the balance here, but it's not used in the name anyway)
+            .addPlaceholder("page", page)
+            .addPlaceholder("total_pages", totalPages);
+
+        // Get the player info lines from config using placeholders
+        java.util.List<String> rawLines = ((com.minekarta.playerauction.PlayerAuction) plugin).getConfigManager().getMessages().getStringList("gui.control-items.player-info");
+        java.util.List<String> processedLines = new java.util.ArrayList<>();
+
+        for (String line : rawLines) {
+            String processedLine = context.applyTo(line);
+            processedLines.add(processedLine);
+        }
+
+        // Extract the name and lore from the processed lines
+        String itemName = processedLines.size() > 0 ? processedLines.get(0) : "&e" + player.getName();
+        String balanceLine = processedLines.size() > 1 ? processedLines.get(1) : "&7Balance: &e0";
+        String pageLine = processedLines.size() > 2 ? processedLines.get(2) : "&7Page: &e" + page + "/" + totalPages;
+
+        ItemStack playerInfoItem = new GuiItemBuilder(org.bukkit.Material.PLAYER_HEAD)
+            .setSkullOwner(player.getName())
+            .setName(itemName)
+            .setLore(balanceLine, pageLine)
+            .build();
+
+        inventory.setItem(49, playerInfoItem);
+    }
 }

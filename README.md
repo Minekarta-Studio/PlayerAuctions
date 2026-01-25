@@ -2,7 +2,7 @@
 
 PlayerAuctions is a modern and feature-rich auction house plugin for PaperMC servers. It provides a robust, intuitive, and scalable platform for players to buy and sell items, fully integrated with Vault-based economies and PlaceholderAPI.
 
-## 🆕 Latest Version (v2.0.0)
+## 🆕 Latest Version (v2.1.0)
 
 - **Modern Build**: Compatible with Minecraft 1.19-1.21
 - **Legacy Build**: Compatible with Minecraft 1.16-1.18 (v1.9.9)
@@ -39,7 +39,7 @@ PlayerAuctions is a modern and feature-rich auction house plugin for PaperMC ser
 - **Integration Support**:
   - **Vault Economy**: Full integration with Vault-based economies
   - **PlaceholderAPI**: Support for displaying auction data externally
-  - **SQLite Database**: Lightweight and reliable data storage
+  - **JSON Storage**: Lightweight and reliable data storage (replaces SQLite)
   - **Multiple Economy Providers**: Support for various economy plugins
 
 ## 🚀 Commands
@@ -188,9 +188,9 @@ Available placeholders for displaying auction data:
 ### Version-Specific Downloads
 PlayerAuctions provides optimized builds for different Minecraft versions:
 
-- **Modern Versions (1.19-1.21)**: `PlayerAuctions-2.0.0-Modern.jar` (~16MB)
+- **Modern Versions (1.19-1.21)**: `PlayerAuctions-2.1.0-Modern.jar` (~16MB)
 - **Legacy Versions (1.16-1.18)**: `PlayerAuctions-1.9.9-Legacy.jar` (~15MB)
-- **Version-Specific Builds**: `PlayerAuctions-2.0.0-1.20.jar`, `PlayerAuctions-2.0.0-1.19.jar`
+- **Version-Specific Builds**: `PlayerAuctions-2.1.0-1.20.jar`, `PlayerAuctions-2.1.0-1.19.jar`
 
 ### Installation Steps
 1. Choose the correct version for your Minecraft server
@@ -245,13 +245,13 @@ mvn clean package -Pmodern,legacy,1.20,1.19
 
 ### Generated Files
 After building, you'll find these files in `target/`:
-- `PlayerAuctions-2.0.0-Modern.jar` (~16MB) - Minecraft 1.19-1.21
+- `PlayerAuctions-2.1.0-Modern.jar` (~16MB) - Minecraft 1.19-1.21
 - `PlayerAuctions-1.9.9-Legacy.jar` (~15MB) - Minecraft 1.16-1.18
-- `PlayerAuctions-2.0.0-1.20.jar` (~16MB) - Minecraft 1.20.x
-- `PlayerAuctions-2.0.0-1.19.jar` (~16MB) - Minecraft 1.19.x
+- `PlayerAuctions-2.1.0-1.20.jar` (~16MB) - Minecraft 1.20.x
+- `PlayerAuctions-2.1.0-1.19.jar` (~16MB) - Minecraft 1.19.x
 
 ### Version Naming Scheme
-- **Modern Builds (v2.0.0)**: Latest features for modern Minecraft versions
+- **Modern Builds (v2.1.0)**: Latest features for modern Minecraft versions
 - **Legacy Builds (v1.9.9)**: Compatible build for older Minecraft versions
 - **Semantic Versioning**: Uses consistent version numbers instead of Minecraft versions
 - **No Breaking Changes**: All versions have same features, just optimized for different Minecraft versions

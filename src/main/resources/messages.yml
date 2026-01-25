@@ -1,180 +1,286 @@
-# KartaAuctionHouse Messages
-# Placeholders: {placeholder}
-# Color Codes: &a, &b, &c, etc.
+# ================================
+# PlayerAuctions Messages Configuration
+# ================================
+#
+# This plugin uses MiniMessage format by default for modern, beautiful text formatting!
+#
+# 📘 MiniMessage Format (Default):
+#    - Basic Colors: <red>Text</red>, <green>Text</green>, <gold>Text</gold>
+#    - Gradients: <gradient:red:blue>Text</gradient>
+#    - Hex Colors: <color:#FF0000>Text</color>
+#    - Formatting: <bold>Bold</bold>, <italic>Italic</italic>
+#    - Hover: <hover:show_text:'Tooltip'>Hover me</hover>
+#    - Click: <click:run_command:'/cmd'>Clickable</click>
+#    - Combined: <gradient:gold:yellow><bold>Beautiful!</bold></gradient>
+#
+# 🎨 Alternative Formats (Also Supported):
+#    - Hex Colors: &#FF0000Text
+#    - RGB Colors: &rgb(255,0,0)Text
+#    - Legacy: &a, &c, &e (for backward compatibility)
+#
+# 💡 Placeholders: {placeholder} or %placeholder%
+#    Both formats work! Examples: {player_name}, %player_name%
+#
+# 🔗 Learn More: https://docs.advntr.dev/minimessage/
+# ================================
 
-prefix: "&7[&6KartaAuctionHouse&7] "
+# ========================================
+# PREFIX
+# ========================================
+prefix: "<gradient:gold:yellow><bold>[PlayerAuctions]</bold></gradient> <gray>»</gray> "
 
+# ========================================
+# AUCTION MESSAGES
+# ========================================
 auction:
-  purchase-success: "&a&oYou have successfully purchased &e&o%item% &a&ofor &e&o%price%&a&o! Find it in your mailbox."
-  sold: "&a&oYour item &e&o%item% &a&o has been sold for &e&o%price%&a&o. The money is in your mailbox."
-  expired: "&e&oYour auction for &e&o%item% &e&o has expired. The item has been returned to your mailbox."
-  search_no_results: "&c&oNo items found matching '&e&o%keyword%&c&o'. Try a different search term."
+  purchase-success: "<gradient:green:aqua><bold>Purchase Successful!</bold></gradient> <gray>You bought</gray> <white>{item}</white> <gray>for</gray> <gold>{price}</gold><gray>! Check your mailbox.</gray>"
+  sold: "<gradient:gold:yellow><bold>Item Sold!</bold></gradient> <gray>Your</gray> <white>{item}</white> <gray>sold for</gray> <gold>{price}</gold><gray>! Money is in your mailbox.</gray>"
+  expired: "<yellow><bold>Auction Expired</bold></yellow> <gray>Your auction for</gray> <white>{item}</white> <gray>expired. Item returned to mailbox.</gray>"
+  search_no_results: "<red>No Results Found</red> <gray>No items matching</gray> <yellow>'{keyword}'</yellow><gray>. Try different keywords.</gray>"
+  cancel-success: "<green>Auction Cancelled</green> <gray>Your</gray> <white>{item}</white> <gray>has been returned to your mailbox.</gray>"
 
+# ========================================
+# ERROR MESSAGES
+# ========================================
 errors:
-  no-permission: "&c&oYou don't have permission for this action. Contact server staff if you believe this is an error."
-  usage-sell: "&c&oUsage: &e&o{usage}&r\n&e&o  - &a&o<price>&r: &7Set the price for your item\n&e&o  - &a&o[buyNow]&r: &7Optional instant buy price (use 0 to disable)\n&e&o  - &7Duration is set by server configuration."
-  usage-search: "&c&oUsage: &e&o{usage}"
-  usage-notify: "&c&oUsage: &e&o{usage}"
-  usage-duration: "&c&oDuration format invalid. Use formats like: 1h, 24h, 3d, 1w (hours, days, weeks)."
-  invalid-category: "&c&oInvalid category: &e&o{category}&r\n&e&oValid categories: &a&oWEAPONS, ARMOR, BLOCKS, FOOD, POTIONS, TOOLS, MISC"
-  not-a-number: "&c&oPlease enter a valid number (e.g., 100, 150.50)."
-  no-item-in-hand: "&c&oYou must be holding an item to sell it in the auction house."
-  price-too-low: "&c&oPrice must be at least &e&o{min}&c&o. Please set a higher price."
-  price-too-high: "&c&oPrice exceeds maximum allowed value of &e&o{max}&c&o."
-  duration-out-of-range: "&c&oDuration must be between &e&o{min}&c&o and &e&o{max}&c&o."
-  auction-not-found: "&c&oAuction not found or has already ended. The auction may have been removed or expired."
-  cannot-buy-own: "&c&oYou cannot buy your own item. Please buy other players' items."
-  buy-fail: "&c&oCould not process purchase. The item may have already been sold or the auction has ended."
-  economy-fail: "&c&oEconomy operation failed. Please contact an administrator if this error persists."
-  inventory-full: "&c&oYour inventory is full. Please make space and try again."
-  player-not-found: "&c&oPlayer not found: &e&o{player}&c&o. Please check the player name and try again."
-  listing-limit-reached: "&c&oYou have reached the maximum number of active listings (&e&o{limit}&c&o). Please cancel some listings or wait for them to expire."
-  not-your-auction: "&c&oYou can only modify your own listings. This listing belongs to another player."
-  auction-not-active: "&c&oThis listing is not active and cannot be modified."
-  reload-fail: "&c&oFailed to reload configs. Check the console for errors."
-  reload-success: "&a&oSuccessfully reloaded all configuration files."
-  generic-error: "&c&oAn unexpected error occurred. Please try again or contact an administrator."
-  too-few-items: "&c&oYou must sell at least one item. Make sure you're holding a valid item."
-  not-enough-money: "&c&oYou don't have enough money to purchase this item for &e&o{amount}&c&o."
-  invalid-auction-params: "&c&oInvalid auction parameters. Please check your prices and duration."
-  cannot-cancel-status: "&c&oYou cannot cancel an auction with this status."
-  usage-debug: "&c&oUsage: &e&o{usage}"
-  usage-admin: "&c&oUsage: &e&o{usage}"
+  no-permission: "<red><bold>✘ Permission Denied</bold></red> <gray>Contact server staff if this is an error.</gray>"
+  
+  usage-sell: "<red>Invalid Usage!</red> <yellow>/ah sell <price> [buyNow] [duration]</yellow>\n<gray>  • <green><price></green> - Set the item price\n  • <aqua>[buyNow]</aqua> - Optional instant buy price\n  • <aqua>[duration]</aqua> - Auction duration (default: config setting)</gray>"
+  usage-search: "<red>Usage:</red> <yellow>{usage}</yellow>"
+  usage-notify: "<red>Usage:</red> <yellow>{usage}</yellow>"
+  usage-duration: "<red>Invalid Duration Format!</red> <gray>Use:</gray> <yellow>1h, 24h, 3d, 1w</yellow> <gray>(hours, days, weeks)</gray>"
+  usage-debug: "<red>Usage:</red> <yellow>{usage}</yellow>"
+  usage-admin: "<red>Usage:</red> <yellow>{usage}</yellow>"
+  
+  invalid-category: "<red>Invalid Category:</red> <yellow>{category}</yellow>\n<gray>Valid categories:</gray> <green>WEAPONS, ARMOR, BLOCKS, FOOD, POTIONS, TOOLS, MISC</green>"
+  not-a-number: "<red>Invalid Number!</red> <gray>Please enter a valid number like</gray> <yellow>100</yellow> <gray>or</gray> <yellow>150.50</yellow>"
+  no-item-in-hand: "<red>No Item in Hand!</red> <gray>Hold an item to list it in the auction house.</gray>"
+  
+  price-too-low: "<red>Price Too Low!</red> <gray>Minimum price is</gray> <gold>{min}</gold><gray>. Set a higher price.</gray>"
+  price-too-high: "<red>Price Too High!</red> <gray>Maximum price is</gray> <gold>{max}</gold><gray>.</gray>"
+  duration-out-of-range: "<red>Invalid Duration!</red> <gray>Must be between</gray> <yellow>{min}</yellow> <gray>and</gray> <yellow>{max}</yellow><gray>.</gray>"
+  
+  auction-not-found: "<red>Auction Not Found!</red> <gray>This auction may have ended or been removed.</gray>"
+  cannot-buy-own: "<red>Cannot Buy Own Item!</red> <gray>You cannot purchase your own auction.</gray>"
+  buy-fail: "<red>Purchase Failed!</red> <gray>The item may have already been sold.</gray>"
+  
+  economy-fail: "<dark_red><bold>Economy Error!</bold></dark_red> <gray>Please contact an administrator.</gray>"
+  inventory-full: "<red>Inventory Full!</red> <gray>Make space in your inventory and try again.</gray>"
+  player-not-found: "<red>Player Not Found:</red> <yellow>{player}</yellow> <gray>Check the name and try again.</gray>"
+  
+  listing-limit-reached: "<red>Listing Limit Reached!</red> <gray>Maximum active listings:</gray> <yellow>{limit}</yellow><gray>. Cancel some or wait for them to expire.</gray>"
+  not-your-auction: "<red>Not Your Auction!</red> <gray>You can only modify your own listings.</gray>"
+  auction-not-active: "<red>Auction Not Active!</red> <gray>Only active auctions can be modified.</gray>"
+  
+  reload-fail: "<red>Reload Failed!</red> <gray>Check console for errors.</gray>"
+  reload-success: "<green><bold>✓ Reload Successful!</bold></green> <gray>All configurations reloaded.</gray>"
+  
+  generic-error: "<red>Unexpected Error!</red> <gray>Please try again or contact an administrator.</gray>"
+  too-few-items: "<red>Not Enough Items!</red> <gray>You must sell at least one item.</gray>"
+  not-enough-money: "<red>Insufficient Funds!</red> <gray>You need</gray> <gold>{amount}</gold> <gray>to purchase this item.</gray>"
+  insufficient-funds: "<red>Insufficient Funds!</red> <gray>Need:</gray> <gold>{needed}</gold> <gray>| Have:</gray> <gold>{balance}</gold>"
+  
+  invalid-auction-params: "<red>Invalid Parameters!</red> <gray>Check your prices and duration.</gray>"
+  cannot-cancel-status: "<red>Cannot Cancel!</red> <gray>This auction status prevents cancellation.</gray>"
+  cancel-failed: "<red>Cancellation Failed!</red> <gray>Could not cancel listing. Please try again.</gray>"
+  
   auction-parameters-validation:
-    min-price: "&c&oStarting price must be at least &e&o{min}&c&o."
-    buy-now-higher: "&c&oBuy now price must be higher than starting price."
-    reserve-higher: "&c&oReserve price must be higher than starting price."
-    duration-too-long: "&c&oAuction duration exceeds maximum allowed (&e&o{max_duration}&c&o)."
+    min-price: "<red>Price Too Low!</red> <gray>Starting price must be at least</gray> <gold>{min}</gold><gray>.</gray>"
+    buy-now-higher: "<red>Invalid Buy Now Price!</red> <gray>Must be higher than starting price.</gray>"
+    reserve-higher: "<red>Invalid Reserve Price!</red> <gray>Must be higher than starting price.</gray>"
+    duration-too-long: "<red>Duration Too Long!</red> <gray>Maximum duration:</gray> <yellow>{max_duration}</yellow>"
+  
+  player-only: "<red>Players Only!</red> <gray>This command can only be used by players.</gray>"
+  unknown-command: "<red>Unknown Command:</red> <yellow>{command}</yellow> <gray>Use</gray> <yellow>{usage}</yellow> <gray>for help.</gray>"
 
+  # Search validation errors
+  empty-search-query: "<red>Empty Query!</red> <gray>Search query cannot be empty.</gray> <yellow>Type 'cancel' to exit.</yellow>"
+  search-query-too-short: "<red>Query Too Short!</red> <gray>Please enter at least 2 characters.</gray> <yellow>Type 'cancel' to exit.</yellow>"
+  search-query-too-long: "<red>Query Too Long!</red> <gray>Maximum 50 characters.</gray> <yellow>Type 'cancel' to exit.</yellow>"
+
+# ========================================
+# INFO MESSAGES
+# ========================================
 info:
-  enter-search-query: "&a&oPlease type your search query in chat. Type '&e&ocancel&r' &a&oto exit search mode."
-  listed: "&a&oYou listed &e&o{item}&a&o for &e&o{price}&a&o with a &e&o{duration}&a&o duration. Check it in your listings!"
-  bid-placed: "&a&oYou successfully bid &e&o{amount}&a&o on &e&o{item}&a&o. You'll receive notifications if outbid."
-  outbid: "&e&oYou have been outbid on &e&o{item}&e&o! Your money has been returned to your mailbox. Consider placing a higher bid!"
-  you-are-highest: "&a&oYou are now the highest bidder on &e&o{item}&a&o with a bid of &e&o{amount}&a&o!"
-  notifications-on: "&a&oAuction notifications have been &e&oenabled&r&a&o. You will receive updates about your auctions."
-  notifications-off: "&a&oAuction notifications have been &e&odisabled&r&a&o. You will no longer receive updates."
-  bought: "&a&oYou successfully purchased &e&o{item}&a&o for &e&o{amount}&a&o! Find it in your &e&o/ah mailbox&r&a&o."
-  sold: "&a&oYour auction for &e&o{item}&a&o sold for &e&o{amount}&a&o! After tax (&e&o{tax}%&a&o), you received &e&o{net_amount}&a&o. Check your mailbox!"
-  expired-returned: "&e&oYour auction for &e&o{item}&e&o has expired without selling. The item has been returned to your &e&o/ah mailbox&r&e&o."
-  cancelled: "&a&oYou have cancelled your auction for &e&o{item}&a&o. The item has been returned to your &e&o/ah mailbox&r&a&o."
-  anti_sniping_extended: "&a&oAnti-sniping activated! This auction has been extended by &e&o{extension}&a&o due to a late bid."
-  minimum_bid_increment: "&e&oMinimum bid increment of &e&o{increment}&e&o is required for this auction."
+  enter-search-query: "<aqua><bold>Search Mode Activated</bold></aqua> <gray>Type your search query in chat.</gray> <yellow>Type 'cancel' to exit.</yellow>"
+  
+  listed: "<gradient:green:aqua><bold>✓ Item Listed!</bold></gradient> <white>{item}</white> <gray>for</gray> <gold>{price}</gold> <gray>• Duration:</gray> <yellow>{duration}</yellow>"
+  
+  bid-placed: "<green><bold>✓ Bid Placed!</bold></green> <gray>You bid</gray> <gold>{amount}</gold> <gray>on</gray> <white>{item}</white><gray>. You'll be notified if outbid.</gray>"
+  outbid: "<yellow><bold>⚠ Outbid!</bold></yellow> <gray>Someone outbid you on</gray> <white>{item}</white><gray>! Money returned to mailbox.</gray>"
+  you-are-highest: "<gradient:green:aqua><bold>★ Highest Bidder!</bold></gradient> <gray>You're winning</gray> <white>{item}</white> <gray>with</gray> <gold>{amount}</gold>"
+  
+  notifications-on: "<green><bold>✓ Notifications Enabled</bold></green> <gray>You'll receive auction updates.</gray>"
+  notifications-off: "<yellow><bold>⚠ Notifications Disabled</bold></yellow> <gray>You won't receive auction updates.</gray>"
+  
+  bought: "<gradient:green:aqua><bold>Purchase Complete!</bold></gradient> <gray>You bought</gray> <white>{item}</white> <gray>for</gray> <gold>{amount}</gold><gray>! Check</gray> <yellow>/ah mailbox</yellow>"
+  
+  sold: "<gradient:gold:yellow><bold>★ Sale Complete!</bold></gradient> <white>{item}</white> <gray>sold for</gray> <gold>{amount}</gold> <gray>• Tax:</gray> <red>{tax}%</red> <gray>• You received:</gray> <green>{net_amount}</green>"
+  
+  expired-returned: "<yellow>Auction Expired</yellow> <gray>Your</gray> <white>{item}</white> <gray>didn't sell. Item returned to</gray> <yellow>/ah mailbox</yellow>"
+  cancelled: "<green>Auction Cancelled</green> <gray>Your</gray> <white>{item}</white> <gray>returned to</gray> <yellow>/ah mailbox</yellow>"
+  
+  anti_sniping_extended: "<aqua><bold>⏰ Anti-Snipe!</bold></aqua> <gray>Auction extended by</gray> <yellow>{extension}</yellow> <gray>due to late bid.</gray>"
+  minimum_bid_increment: "<yellow>Minimum Increment:</yellow> <gold>{increment}</gold> <gray>required for this auction.</gray>"
+  
+  confirm-cancel: "<yellow>Confirm Cancellation</yellow> <gray>Cancel auction for</gray> <white>{item}</white> <gray>(</gray><gold>{price}</gold><gray>)?</gray>"
+  create-auction-unavailable: "<red>Feature Unavailable</red> <gray>Create auction feature is currently disabled.</gray>"
+  reload-success: "<green><bold>✓ Success!</bold></green> <gray>Configuration reloaded successfully.</gray>"
 
+  # Search messages
+  search-cancelled: "<yellow>Search Cancelled</yellow> <gray>Returning to auction house.</gray>"
+  search-started: "<aqua><bold>🔍 Searching...</bold></aqua> <gray>Query:</gray> <yellow>\"{query}\"</yellow>"
+
+# ========================================
+# ADMIN MESSAGES
+# ========================================
 admin:
-  debug-enabled: "&a&oDebug mode enabled. You can now interact with your own auctions."
-  debug-disabled: "&a&oDebug mode disabled. Normal auction rules apply."
-  cannot-interact-with-own: "&c&oYou cannot interact with your own auction while not in debug mode."
+  debug-enabled: "<green><bold>✓ Debug Mode ON</bold></green> <gray>You can now interact with your own auctions.</gray>"
+  debug-disabled: "<yellow><bold>⚠ Debug Mode OFF</bold></yellow> <gray>Normal auction rules apply.</gray>"
+  cannot-interact-with-own: "<red>Debug Mode Required!</red> <gray>Enable debug mode to interact with your own auctions.</gray>"
 
+# ========================================
+# MAILBOX MESSAGES
+# ========================================
 mailbox:
-  received-money: "&a&oYou received &e&o{amount}&a&o. &7&oReason: &r&e&o{note}"
-  received-item: "&a&oYou received &e&o{item}&a&o. &7&oReason: &r&e&o{note}"
-  claimed-money: "&a&oYou claimed &e&o{amount}&a&o from your mailbox."
-  claimed-item: "&a&oYou claimed &e&o{item}&a&o from your mailbox."
-  no_items: "&e&oYour mailbox is currently empty. No items or money are waiting for you."
-  items_waiting: "&a&oYou have &e&o{count}&a&o items waiting in your mailbox!"
+  received-money: "<gradient:green:aqua><bold>✓ Money Received!</bold></gradient> <gold>{amount}</gold> <gray>• Reason:</gray> <yellow>{note}</yellow>"
+  received-item: "<gradient:green:aqua><bold>✓ Item Received!</bold></gradient> <white>{item}</white> <gray>• Reason:</gray> <yellow>{note}</yellow>"
+  claimed-money: "<green><bold>✓ Claimed!</bold></green> <gray>You claimed</gray> <gold>{amount}</gold> <gray>from your mailbox.</gray>"
+  claimed-item: "<green><bold>✓ Claimed!</bold></green> <gray>You claimed</gray> <white>{item}</white> <gray>from your mailbox.</gray>"
+  no_items: "<yellow>Mailbox Empty</yellow> <gray>No items or money waiting for you.</gray>"
+  items_waiting: "<gradient:gold:yellow><bold>📬 Mailbox Alert!</bold></gradient> <gray>You have</gray> <green>{count}</green> <gray>items waiting!</gray>"
 
+# ========================================
+# GUI MESSAGES
+# ========================================
 gui:
-  main-title: "&6&lKartaAuctionHouse &7- &e&lMain Auction"
-  my-listings-title: "&6&lMy Listings &7- &e&lYour Active Auctions"
-  mailbox-title: "&6&lMy Mailbox &7- &e&lYour Items & Money"
-  history-title: "&6&lAuction History &7- &e&lPast Transactions"
-  search-title: "&6&lSearch Results &7- &e&l\"{query}\""
+  # GUI Titles (displayed at top of inventory)
+  main-title: "<gradient:gold:yellow><bold>PlayerAuctions</bold></gradient> <dark_gray>•</dark_gray> <white>Market</white>"
+  my-listings-title: "<gradient:aqua:blue><bold>My Listings</bold></gradient> <dark_gray>•</dark_gray> <white>Active Auctions</white>"
+  mailbox-title: "<gradient:green:aqua><bold>Mailbox</bold></gradient> <dark_gray>•</dark_gray> <white>Items & Money</white>"
+  history-title: "<gradient:light_purple:pink><bold>History</bold></gradient> <dark_gray>•</dark_gray> <white>Transactions</white>"
+  search-title: "<gradient:aqua:blue><bold>Search</bold></gradient> <dark_gray>•</dark_gray> <yellow>\"{query}\"</yellow>"
   
-  # Control items in GUI
+  # Control Items (buttons in GUI)
   control-items:
-    previous-page: "&a&l← Previous Page"
+    # Pagination
+    previous-page: "<green><bold>« PREVIOUS</bold></green>"
     previous-page-lore:
-      - "&7Go back to the previous page"
-      - "&7Current page: &e{current_page}"
-      - "&7Total pages: &e{total_pages}"
-    next-page: "&a&lNext Page →"
+      - ""
+      - "<gray>Go to previous page</gray>"
+      - ""
+      - "<dark_gray>Page <yellow>{current_page}</yellow> of <yellow>{total_pages}</yellow></dark_gray>"
+      
+    next-page: "<green><bold>NEXT »</bold></green>"
     next-page-lore:
-      - "&7Go forward to the next page"
-      - "&7Current page: &e{current_page}"
-      - "&7Total pages: &e{total_pages}"
-    close: "&c&lCLOSE"
+      - ""
+      - "<gray>Go to next page</gray>"
+      - ""
+      - "<dark_gray>Page <yellow>{current_page}</yellow> of <yellow>{total_pages}</yellow></dark_gray>"
+    
+    # Actions
+    close: "<red><bold>✘ CLOSE</bold></red>"
     close-lore:
-      - "&7Close this auction house window"
-      - "&7Your progress will be saved"
-    sort: "&6&lSort By: &e&o{sort_order}"
+      - ""
+      - "<gray>Close this window</gray>"
+      - "<dark_gray>Your progress is saved</dark_gray>"
+
+    sort: "<gold><bold>⚙ SORT</bold></gold>"
     sort-lore:
-      - "&7Current sort: &e{sort_order}"
-      - "&7Click to cycle through:"
-      - "&eNewest → Price (Low-High) → Price (High-Low) → Time Remaining"
-    search: "&b&lSEARCH"
+      - ""
+      - "<gray>Current:</gray> <yellow>{sort_order}</yellow>"
+      - ""
+      - "<white>Available options:</white>"
+      - "<dark_gray>  ▸ Newest First</dark_gray>"
+      - "<dark_gray>  ▸ Price (Low → High)</dark_gray>"
+      - "<dark_gray>  ▸ Price (High → Low)</dark_gray>"
+      - "<dark_gray>  ▸ Time Remaining</dark_gray>"
+      - ""
+      - "<gradient:gold:yellow>» Click to cycle «</gradient>"
+
+    search: "<aqua><bold>🔍 SEARCH</bold></aqua>"
     search-lore:
-      - "&7Click to enter search mode"
-      - "&7Current search: &e{query}"
-      - "&7Type 'cancel' to clear search"
-    my-listings: "&e&lMy Listings"
+      - ""
+      - "<gray>Find specific items</gray>"
+      - ""
+      - "<yellow>Current:</yellow> <white>{query}</white>"
+      - ""
+      - "<gradient:aqua:blue>» Click to search «</gradient>"
+
+    my-listings: "<yellow><bold>📋 MY LISTINGS</bold></yellow>"
     my-listings-lore:
-      - "&7View your active auctions"
-      - "&7Current active: &e{count}"
-      - "&7Max allowed: &e{max}"
-    mailbox: "&e&lMy Mailbox"
+      - ""
+      - "<gray>View your active auctions</gray>"
+      - ""
+      - "<green>Active:</green> <white>{count}</white><gray>/</gray><white>{max}</white>"
+      - ""
+      - "<gradient:yellow:gold>» Click to view «</gradient>"
+
+    mailbox: "<gradient:green:aqua><bold>📬 MAILBOX</bold></gradient>"
     mailbox-lore:
-      - "&7Check your mailbox"
-      - "&7Unclaimed items: &e{count}"
-      - "&7Click to view"
-    back: "&6&l← Back"
+      - ""
+      - "<gray>Check your pending items</gray>"
+      - ""
+      - "<yellow>Unclaimed:</yellow> <white>{count}</white>"
+      - ""
+      - "<gradient:green:aqua>» Click to open «</gradient>"
+
+    back: "<gold><bold>« BACK</bold></gold>"
     back-lore:
-      - "&7Return to the previous menu"
+      - ""
+      - "<gray>Return to previous menu</gray>"
+    
+    # Player Info (center display)
     player-info:
-      - "&e&l{player_name}"
-      - "&7Balance: &e{balance}"
-      - "&7Page: &e{page}/{total_pages}"
-  
-  # Item lore in main auction view
+      - ""
+      - "<gradient:gold:yellow><bold>{player_name}</bold></gradient>"
+      - ""
+      - "<gray>Balance:</gray> <green>{balance}</green>"
+      - "<gray>Page:</gray> <yellow>{page}</yellow><dark_gray>/</dark_gray><yellow>{total_pages}</yellow>"
+      - ""
+
+  # ✅ IMPROVED: Item Lore Templates - NO DUPLICATE ITEM NAME!
   item-lore:
-    - "&7Seller: &e{seller}"
     - ""
-    - "&7Starting Price: &a{starting_price}"
-    - "&7Current Bid: &e{current_bid}"
-    - "&7Buy Now: &c{buy_now_price}"
-    - "&7Reserve: &b{reserve_price}"
+    - "<gradient:gold:yellow>▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬</gradient>"
+    - "<white><bold>Auction Details</bold></white>"
+    - "<gradient:gold:yellow>▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬</gradient>"
     - ""
-    - "&7Time Left: &e{time_left}"
-    - "&7Status: {status_color}{status}"
+    - "<gray>Seller:</gray> <yellow>{seller}</yellow>"
+    - "<gray>Price:</gray> <gold><bold>{price}</bold></gold>"
     - ""
-    - "&a&oClick to view details!"
-    - "&7Right-click to quick bid!"
-  
-  # Item lore in my listings view
+    - "<gray>Time Left:</gray> <aqua>{time_left}</aqua>"
+    - "<gray>Status:</gray> {status_color}{status}"
+    - ""
+    - "<gradient:gold:yellow>▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬</gradient>"
+
+  # ✅ NEW: Action buttons section
+  item-action:
+    can-purchase: "<gradient:green:aqua><bold>✓ CLICK TO BUY</bold></gradient>\n<dark_gray>▸ Instant purchase available</dark_gray>"
+    insufficient-funds: "<red><bold>✘ CANNOT AFFORD</bold></red>\n<dark_gray>▸ {affordable_text}</dark_gray>"
+
   my-listings-lore:
-    - "&7Item: &e{item_name}"
-    - "&7Duration: &e{duration}"
     - ""
-    - "&7Starting Price: &a{starting_price}"
-    - "&7Current Bid: &e{current_bid}"
-    - "&7Buy Now: &c{buy_now_price}"
+    - "<gradient:aqua:blue>▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬</gradient>"
+    - "<white><bold>Your Listing</bold></white>"
+    - "<gradient:aqua:blue>▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬</gradient>"
     - ""
-    - "&7Time Left: &e{time_left}"
-    - "&7Bidders: &e{bidder_count}"
-    - "&7Status: &e{status}"
+    - "<gray>Price:</gray> <gold>{starting_price}</gold>"
+    - "<gray>Duration:</gray> <yellow>{duration}</yellow>"
+    - "<gray>Time Left:</gray> <aqua>{time_left}</aqua>"
     - ""
-    - "&e&oClick to view details!"
-    - "&c&oRight-click to cancel &7&o(only if no bids)"
-  
-  # Status messages for auctions  
+    - "<gray>Bids:</gray> <white>{bidder_count}</white>"
+    - "<gray>Status:</gray> {status_color}{status}"
+    - ""
+    - "<gradient:aqua:blue>▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬</gradient>"
+    - ""
+    - "<yellow><bold>» CLICK FOR OPTIONS</bold></yellow>"
+    - "<dark_gray>Right-click to cancel</dark_gray>"
+
+  # Status Messages
   status:
-    active: "&a&lACTIVE"
-    expired: "&c&lEXPIRED"
-    sold: "&6&lSOLD"
-    cancelled: "&7&lCANCELLED"
-    reserve_not_met: "&c&lRESERVE NOT MET"
-  
-  # Item lore in my listings view
-  my-listings-lore:
-    - "&7Item: &e{item_name}"
-    - "&7Duration: &e{duration}"
-    - ""
-    - "&7Starting Price: &a{starting_price}"
-    - "&7Current Bid: &e{current_bid}"
-    - "&7Buy Now: &c{buy_now_price}"
-    - ""
-    - "&7Time Left: &e{time_left}"
-    - "&7Bidders: &e{bidder_count}"
-    - ""
-    - "&e&oClick to view details!"
-    - "&c&oRight-click to cancel &7&o(only if no bids)"
+    active: "<green><bold>✓ ACTIVE</bold></green>"
+    expired: "<red><bold>✘ EXPIRED</bold></red>"
+    sold: "<gold><bold>★ SOLD</bold></gold>"
+    cancelled: "<gray><bold>⊘ CANCELLED</bold></gray>"
+    reserve_not_met: "<yellow><bold>⚠ RESERVE NOT MET</bold></yellow>"

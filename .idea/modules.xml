@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/karta-auction-house.iml" filepath="$PROJECT_DIR$/karta-auction-house.iml" />
+      <module fileurl="file://$PROJECT_DIR$/player-auctions.iml" filepath="$PROJECT_DIR$/player-auctions.iml" />
     </modules>
   </component>
 </project>

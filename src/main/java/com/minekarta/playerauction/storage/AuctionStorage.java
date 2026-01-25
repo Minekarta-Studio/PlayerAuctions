@@ -51,6 +51,11 @@ public interface AuctionStorage {
     CompletableFuture<Integer> countActiveAuctionsByPlayer(UUID playerId);
 
     /**
+     * Counts the total number of active auctions.
+     */
+    CompletableFuture<Integer> countAllActiveAuctions();
+
+    /**
      * Inserts a new auction into the storage.
      */
     CompletableFuture<Void> insertAuction(Auction a);
