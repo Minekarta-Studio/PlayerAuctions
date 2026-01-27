@@ -35,3 +35,4 @@ public interface EconomyService {
      */
     CompletableFuture<Double> getBalance(UUID player);
 }
+

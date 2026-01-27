@@ -32,10 +32,11 @@ public class AuctionService {
     private final ConfigManager configManager;
     private final NotificationManager notificationManager;
     private final com.minekarta.playerauction.transaction.TransactionLogger transactionLogger;
+    private final com.minekarta.playerauction.mailbox.MailboxService mailboxService;
 
     private final ConcurrentHashMap<UUID, ReentrantLock> auctionLocks = new ConcurrentHashMap<>();
 
-    public AuctionService(JavaPlugin plugin, Executor asyncExecutor, AuctionStorage auctionStorage, EconomyRouter economyRouter, ConfigManager configManager, NotificationManager notificationManager, com.minekarta.playerauction.transaction.TransactionLogger transactionLogger) {
+    public AuctionService(JavaPlugin plugin, Executor asyncExecutor, AuctionStorage auctionStorage, EconomyRouter economyRouter, ConfigManager configManager, NotificationManager notificationManager, com.minekarta.playerauction.transaction.TransactionLogger transactionLogger, com.minekarta.playerauction.mailbox.MailboxService mailboxService) {
         this.plugin = plugin;
         this.asyncExecutor = asyncExecutor;
         this.auctionStorage = auctionStorage;
@@ -43,6 +44,7 @@ public class AuctionService {
         this.configManager = configManager;
         this.notificationManager = notificationManager;
         this.transactionLogger = transactionLogger;
+        this.mailboxService = mailboxService;
     }
 
     public CompletableFuture<Boolean> createListing(Player player, ItemStack item, double price, Double buyNowPrice, Double reservePrice, long durationMillis) {
@@ -154,6 +156,26 @@ public class AuctionService {
                                                 }
 
                                                 transactionLogger.log(auction, "SOLD", buyer.getUniqueId(), buyPrice);
+
+                                                // Broadcast purchase to all players
+                                                com.minekarta.playerauction.notification.BroadcastManager broadcastManager =
+                                                    ((com.minekarta.playerauction.PlayerAuction) plugin).getBroadcastManager();
+                                                if (broadcastManager != null) {
+                                                    String sellerName = seller != null && seller.isOnline() ?
+                                                        seller.getName() :
+                                                        plugin.getServer().getOfflinePlayer(auction.seller()).getName();
+                                                    ItemStack itemStack = auction.item().toItemStack();
+
+                                                    broadcastManager.broadcastPurchase(
+                                                        buyer.getName(),
+                                                        sellerName,
+                                                        itemStack != null ? itemStack.getType().toString() : "Unknown",
+                                                        itemStack != null ? itemStack.getAmount() : 1,
+                                                        economy.format(buyPrice),
+                                                        buyer.getWorld()
+                                                    );
+                                                }
+
                                                 return true;
                                             } else {
                                                 // Item delivery failed - rare edge case
@@ -286,8 +308,8 @@ public class AuctionService {
     }
 
     // Getters
-    public CompletableFuture<List<Auction>> getActiveAuctions(int page, int limit, com.minekarta.playerauction.gui.model.AuctionCategory category, com.minekarta.playerauction.gui.model.SortOrder sortOrder, String searchQuery) {
-        return auctionStorage.findActiveAuctions(page, limit, category, sortOrder, searchQuery);
+    public CompletableFuture<List<Auction>> getActiveAuctions(int page, int limit, com.minekarta.playerauction.gui.model.AuctionCategory category, com.minekarta.playerauction.gui.model.SortOrder sortOrder) {
+        return auctionStorage.findActiveAuctions(page, limit, category, sortOrder);
     }
 
     public CompletableFuture<List<Auction>> getPlayerAuctions(UUID playerId, int page, int limit) {
@@ -306,15 +328,6 @@ public class AuctionService {
         return auctionStorage.countAllActiveAuctions();
     }
 
-    /**
-     * Gets total active auction count with the same filters used by getActiveAuctions.
-     * Used for accurate pagination when search/category is applied.
-     */
-    public CompletableFuture<Integer> getActiveAuctionCount(com.minekarta.playerauction.gui.model.AuctionCategory category,
-                                                           com.minekarta.playerauction.gui.model.SortOrder sortOrder,
-                                                           String searchQuery) {
-        return auctionStorage.countActiveAuctions(category, sortOrder, searchQuery);
-    }
 
     // Public getters for fields needed by other classes
     public ConfigManager getConfigManager() { return configManager; }

@@ -11,3 +11,4 @@ public enum SortOrder {
     public String getDisplayName() { return displayName; }
     public SortOrder next() { return values()[(this.ordinal() + 1) % values().length]; }
 }
+

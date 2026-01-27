@@ -34,3 +34,4 @@ public record Auction(
         return new Auction(id, seller, item, price, buyNowPrice, reservePrice, createdAt, endAt, status, version + 1);
     }
 }
+

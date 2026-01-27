@@ -185,7 +185,7 @@ public class HistoryGui extends PaginatedGui {
 
         // Handle custom control clicks
         if (slot == 46) { // Back button
-            new MainAuctionGui(kah, player, 1, com.minekarta.playerauction.gui.model.SortOrder.NEWEST, null).open();
+            new MainAuctionGui(kah, player, 1, com.minekarta.playerauction.gui.model.SortOrder.NEWEST).open();
             return;
         }
 
@@ -230,3 +230,4 @@ public class HistoryGui extends PaginatedGui {
         new HistoryGui(kah, player, targetPlayerId, newPage).open();
     }
 }
+

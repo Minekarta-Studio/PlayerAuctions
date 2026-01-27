@@ -2,17 +2,23 @@
 
 PlayerAuctions is a modern and feature-rich auction house plugin for PaperMC servers. It provides a robust, intuitive, and scalable platform for players to buy and sell items, fully integrated with Vault-based economies and PlaceholderAPI.
 
-## 🆕 Latest Version (v2.5.2) 🔴 CRITICAL UPDATE
+## 🆕 Latest Version (v2.5.4)
 
-- **Modern Build**: Compatible with Minecraft 1.19-1.21 (`PlayerAuctions-2.5.2-Modern.jar`)
+- **Broadcast Notifications**: See when players list and purchase items server-wide
+- **Modern Build**: Compatible with Minecraft 1.19-1.21 (`PlayerAuctions-2.5.4-Modern.jar`)
 - **Legacy Build**: Compatible with Minecraft 1.16-1.18 (v1.9.9)
-- **Critical Fix**: Double purchase exploit prevention (security fix)
+- **Mailbox System**: Complete implementation for returned items and money
 - **Size Optimized**: Version-specific builds for better performance
 
-### 🔒 Security Update Notice
-Version 2.5.2 fixes a **critical security vulnerability** that allowed players to purchase the same auction item multiple times. All servers should update immediately to prevent economic exploitation.
 
 ## ✨ Features
+
+- **Broadcast Notifications** (NEW in v2.5.4):
+  - **Global Announcements**: Server-wide broadcasts when items are listed or purchased
+  - **Clickable Links**: Click "View Auction" to open /ah directly
+  - **Configurable**: Enable/disable per event type or globally
+  - **Range Options**: Broadcast to all players (GLOBAL), same world (WORLD), or disable (NONE)
+  - **Beautiful Messages**: Hex-colored messages with emojis and player names
 
 - **Modern GUI Interface**:
   - **Clean Design**: Simple and intuitive auction house interface with color-coded items
@@ -124,9 +130,34 @@ gui:
     name: " "
     lore: []
 
+auction:
+  broadcast:
+    enabled: true         # Enable/disable broadcast notifications
+    on-listing: true      # Broadcast when player lists an item
+    on-purchase: true     # Broadcast when someone purchases an item
+    range: GLOBAL         # GLOBAL (all players), WORLD (same world), NONE (disabled)
+
 mailbox:
   enabled: true
   retention-days: 30
+```
+
+### Broadcast Notification Configuration
+
+The broadcast system allows you to announce auction events server-wide:
+
+- `enabled`: Master toggle for all broadcast features (default: true)
+- `on-listing`: Broadcast when players list items for auction (default: true)
+- `on-purchase`: Broadcast when players purchase items (default: true)
+- `range`: Broadcasting scope (default: GLOBAL)
+  - **GLOBAL**: Broadcast to all online players across all worlds
+  - **WORLD**: Broadcast only to players in the same world as the transaction
+  - **NONE**: Disable broadcasts completely
+
+**Example Broadcast Messages:**
+```
+🛒 PlayerName listed DIAMOND_SWORD ×1 for $1000 › View Auction (clickable)
+✔ BuyerName bought DIAMOND_SWORD ×1 from SellerName for $1000
 ```
 
 ### GUI Border Configuration
@@ -204,9 +235,9 @@ Available placeholders for displaying auction data:
 ### Version-Specific Downloads
 PlayerAuctions provides optimized builds for different Minecraft versions:
 
-- **Modern Versions (1.19-1.21)**: `PlayerAuctions-2.5.2-Modern.jar` (~16MB)
+- **Modern Versions (1.19-1.21)**: `PlayerAuctions-2.5.3-Modern.jar` (~16MB)
 - **Legacy Versions (1.16-1.18)**: `PlayerAuctions-1.9.9-Legacy.jar` (~15MB)
-- **Version-Specific Builds**: `PlayerAuctions-2.5.2-1.20.jar`, `PlayerAuctions-2.5.2-1.19.jar`
+- **Version-Specific Builds**: `PlayerAuctions-2.5.3-1.20.jar`, `PlayerAuctions-2.5.3-1.19.jar`
 
 ### Installation Steps
 1. Choose the correct version for your Minecraft server
@@ -261,13 +292,13 @@ mvn clean package -Pmodern,legacy,1.20,1.19
 
 ### Generated Files
 After building, you'll find these files in `target/`:
-- `PlayerAuctions-2.5.2-Modern.jar` (~16MB) - Minecraft 1.19-1.21
+- `PlayerAuctions-2.5.3-Modern.jar` (~16MB) - Minecraft 1.19-1.21
 - `PlayerAuctions-1.9.9-Legacy.jar` (~15MB) - Minecraft 1.16-1.18
-- `PlayerAuctions-2.5.2-1.20.jar` (~16MB) - Minecraft 1.20.x
-- `PlayerAuctions-2.5.2-1.19.jar` (~16MB) - Minecraft 1.19.x
+- `PlayerAuctions-2.5.3-1.20.jar` (~16MB) - Minecraft 1.20.x
+- `PlayerAuctions-2.5.3-1.19.jar` (~16MB) - Minecraft 1.19.x
 
 ### Version Naming Scheme
-- **Modern Builds (v2.5.2)**: Latest features for modern Minecraft versions
+- **Modern Builds (v2.5.3)**: Latest features for modern Minecraft versions
 - **Legacy Builds (v1.9.9)**: Compatible build for older Minecraft versions
 - **Semantic Versioning**: Uses consistent version numbers instead of Minecraft versions
 - **No Breaking Changes**: All versions have same features, just optimized for different Minecraft versions

@@ -37,7 +37,7 @@ public class AuctionCommand implements CommandExecutor {
         }
 
         if (args.length == 0) {
-            new MainAuctionGui(plugin, player, 1, SortOrder.NEWEST, null).open();
+            new MainAuctionGui(plugin, player, 1, SortOrder.NEWEST).open();
             return true;
         }
 
@@ -60,7 +60,7 @@ public class AuctionCommand implements CommandExecutor {
                 player.sendMessage(configManager.getPrefixedMessage("errors.unknown-command",
                     "{command}", subCommand,
                     "{usage}", "/" + label + " help"));
-                new MainAuctionGui(plugin, player, 1, SortOrder.NEWEST, null).open();
+                new MainAuctionGui(plugin, player, 1, SortOrder.NEWEST).open();
             }
         }
 
@@ -121,10 +121,21 @@ public class AuctionCommand implements CommandExecutor {
                     // Format duration and price for display
                     String formattedDuration = com.minekarta.playerauction.util.TimeUtil.formatDuration(durationMillis);
                     String formattedPrice = plugin.getEconomyRouter().getService().format(price);
+
+                    // Send success message to player
                     player.sendMessage(configManager.getPrefixedMessage("info.listed",
                         "{item}", toSell.getType().toString(),
                         "{price}", formattedPrice,
                         "{duration}", formattedDuration));
+
+                    // Broadcast listing to all players
+                    plugin.getBroadcastManager().broadcastListing(
+                        player.getName(),
+                        toSell.getType().toString(),
+                        toSell.getAmount(),
+                        formattedPrice,
+                        player.getWorld()
+                    );
                 } else {
                     player.sendMessage(configManager.getPrefixedMessage("errors.generic-error"));
                     player.getInventory().addItem(toSell); // Return item on failure
@@ -154,7 +165,7 @@ public class AuctionCommand implements CommandExecutor {
         }
 
         String searchQuery = String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length));
-        new MainAuctionGui(plugin, player, 1, SortOrder.NEWEST, searchQuery).open();
+        new MainAuctionGui(plugin, player, 1, SortOrder.NEWEST).open();
     }
 
     private void handleNotify(Player player, String[] args) {
@@ -242,3 +253,4 @@ public class AuctionCommand implements CommandExecutor {
         player.sendMessage("§6Aliases: §f/ah, /auction, /auctionhouse");
     }
 }
+

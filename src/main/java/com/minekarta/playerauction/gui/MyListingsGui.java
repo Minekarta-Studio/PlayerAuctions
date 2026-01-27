@@ -59,7 +59,7 @@ public class MyListingsGui extends PaginatedGui {
 
     @Override
     protected String getTitle() {
-        return kah.getConfigManager().getMessages().getString("gui.my-listings-title", "&1My Listings");
+        return kah.getConfigManager().getMessage("gui.my-listings-title");
     }
 
     @Override
@@ -293,7 +293,7 @@ public class MyListingsGui extends PaginatedGui {
 
         // Handle custom control clicks
         if (slot == 46) { // Back button
-            new MainAuctionGui(kah, player, 1, com.minekarta.playerauction.gui.model.SortOrder.NEWEST, null).open();
+            new MainAuctionGui(kah, player, 1, com.minekarta.playerauction.gui.model.SortOrder.NEWEST).open();
             return;
         }
 
@@ -349,3 +349,4 @@ public class MyListingsGui extends PaginatedGui {
         new MyListingsGui(kah, player, newPage).open();
     }
 }
+

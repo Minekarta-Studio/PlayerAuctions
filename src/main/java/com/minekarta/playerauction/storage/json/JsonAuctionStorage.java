@@ -102,9 +102,41 @@ public class JsonAuctionStorage implements AuctionStorage {
                 return;
             }
             
-            // Atomic move to prevent corruption
-            if (!tempFile.renameTo(file)) {
-                plugin.getLogger().severe("Failed to rename temporary file to final file");
+            // Atomic move with retry logic to prevent corruption
+            int retries = 3;
+            boolean renamed = false;
+
+            while (retries > 0 && !renamed) {
+                // Delete old file if exists to prevent conflicts
+                if (file.exists()) {
+                    if (!file.delete()) {
+                        plugin.getLogger().warning("Failed to delete old file before rename (attempt " + (4 - retries) + ")");
+                    }
+                }
+
+                // Try to rename temp file to final file
+                renamed = tempFile.renameTo(file);
+
+                if (!renamed) {
+                    retries--;
+                    if (retries > 0) {
+                        try {
+                            Thread.sleep(100); // Wait 100ms before retry
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                            plugin.getLogger().warning("Interrupted while waiting to retry file rename");
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!renamed) {
+                plugin.getLogger().severe("Failed to rename temporary file to final file after 3 attempts. Data may not be saved!");
+                // Try to restore temp file info for debugging
+                if (tempFile.exists()) {
+                    plugin.getLogger().severe("Temporary file still exists at: " + tempFile.getAbsolutePath());
+                }
             }
         } finally {
             lock.readLock().unlock();
@@ -126,22 +158,18 @@ public class JsonAuctionStorage implements AuctionStorage {
     }
 
     @Override
-    public CompletableFuture<List<Auction>> findActive(int limit, int offset, AuctionCategory category, SortOrder sortOrder, String searchQuery) {
+    public CompletableFuture<List<Auction>> findActive(int limit, int offset, AuctionCategory category, SortOrder sortOrder) {
         return CompletableFuture.supplyAsync(() -> {
             lock.readLock().lock();
             try {
-                List<Auction> activeAuctions = auctions.stream()
+                return auctions.stream()
                     .filter(auction -> auction.status() == AuctionStatus.ACTIVE)
                     .filter(auction -> category == AuctionCategory.ALL ||
                            category.matches(auction.item().toItemStack().getType().name()))
-                    .filter(auction -> searchQuery == null || searchQuery.trim().isEmpty() || 
-                           matchesSearch(auction, searchQuery.toLowerCase()))
                     .sorted(getComparator(sortOrder))
                     .skip(offset)
                     .limit(limit)
                     .collect(Collectors.toList());
-                
-                return activeAuctions;
             } finally {
                 lock.readLock().unlock();
             }
@@ -149,8 +177,8 @@ public class JsonAuctionStorage implements AuctionStorage {
     }
 
     @Override
-    public CompletableFuture<List<Auction>> findActiveAuctions(int page, int limit, AuctionCategory category, SortOrder sortOrder, String searchQuery) {
-        return findActive(limit, (page - 1) * limit, category, sortOrder, searchQuery);
+    public CompletableFuture<List<Auction>> findActiveAuctions(int page, int limit, AuctionCategory category, SortOrder sortOrder) {
+        return findActive(limit, (page - 1) * limit, category, sortOrder);
     }
 
     @Override
@@ -279,32 +307,6 @@ public class JsonAuctionStorage implements AuctionStorage {
         }, executor);
     }
 
-    @Override
-    public CompletableFuture<Integer> countActiveAuctions(AuctionCategory category, SortOrder sortOrder, String searchQuery) {
-        return CompletableFuture.supplyAsync(() -> {
-            lock.readLock().lock();
-            try {
-                final String normalizedQuery = (searchQuery == null) ? null : searchQuery.trim().toLowerCase();
-                return (int) auctions.stream()
-                    .filter(auction -> auction.status() == AuctionStatus.ACTIVE)
-                    .filter(auction -> category == AuctionCategory.ALL ||
-                        category.matches(auction.item().toItemStack().getType().name()))
-                    .filter(auction -> normalizedQuery == null || normalizedQuery.isEmpty() || matchesSearch(auction, normalizedQuery))
-                    .count();
-            } finally {
-                lock.readLock().unlock();
-            }
-        }, executor);
-    }
-
-    private boolean matchesSearch(Auction auction, String searchQuery) {
-        String itemType = auction.item().toItemStack().getType().name().toLowerCase();
-        String itemName = auction.item().toItemStack().hasItemMeta() && 
-                         auction.item().toItemStack().getItemMeta().hasDisplayName() ?
-                         auction.item().toItemStack().getItemMeta().getDisplayName().toLowerCase() : "";
-        
-        return itemType.contains(searchQuery) || itemName.contains(searchQuery);
-    }
 
     private Comparator<Auction> getComparator(SortOrder sortOrder) {
         switch (sortOrder) {

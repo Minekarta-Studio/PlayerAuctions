@@ -43,3 +43,4 @@ public class AuctionItem {
         return System.currentTimeMillis() > expiration;
     }
 }
+

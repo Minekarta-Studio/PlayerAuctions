@@ -39,6 +39,13 @@ auction:
   cancel-success: "<#2ECC71>●</#2ECC71> <#ECF0F1>Cancelled</#ECF0F1> <#FFFFFF>{item}</#FFFFFF> <#7F8C8D>› returned to mailbox</#7F8C8D>"
 
 # ════════════════════════════════════════
+# BROADCAST MESSAGES
+# ════════════════════════════════════════
+broadcast:
+  item-listed: "<#F5A623>🛒</#F5A623> <#ECF0F1>{player}</#ECF0F1> <#7F8C8D>listed</#7F8C8D> <#FFFFFF>{item}</#FFFFFF> <#7F8C8D>×{quantity} for</#7F8C8D> <#2ECC71>{price}</#2ECC71> <#7F8C8D>›</#7F8C8D> <#3498DB><click:run_command:/ah><u>View Auction</u></click></#3498DB>"
+  item-purchased: "<#2ECC71>✔</#2ECC71> <#ECF0F1>{buyer}</#ECF0F1> <#7F8C8D>bought</#7F8C8D> <#FFFFFF>{item}</#FFFFFF> <#7F8C8D>×{quantity} from</#7F8C8D> <#ECF0F1>{seller}</#ECF0F1> <#7F8C8D>for</#7F8C8D> <#F5A623>{price}</#F5A623>"
+
+# ════════════════════════════════════════
 # ERROR MESSAGES
 # ════════════════════════════════════════
 errors:
@@ -143,9 +150,19 @@ mailbox:
   received-money: "<#2ECC71>●</#2ECC71> <#ECF0F1>Received</#ECF0F1> <#F5A623>{amount}</#F5A623> <#7F8C8D>› {note}</#7F8C8D>"
   received-item: "<#2ECC71>●</#2ECC71> <#ECF0F1>Received</#ECF0F1> <#FFFFFF>{item}</#FFFFFF> <#7F8C8D>› {note}</#7F8C8D>"
   claimed-money: "<#2ECC71>●</#2ECC71> <#ECF0F1>Claimed</#ECF0F1> <#F5A623>{amount}</#F5A623>"
-  claimed-item: "<#2ECC71>●</#2ECC71> <#ECF0F1>Claimed</#ECF0F1> <#FFFFFF>{item}</#FFFFFF>"
-  no_items: "<#7F8C8D>○</#7F8C8D> <#BDC3C7>Mailbox empty</#BDC3C7>"
-  items_waiting: "<#F5A623>📬</#F5A623> <#ECF0F1>Mailbox</#ECF0F1> <#7F8C8D>›</#7F8C8D> <#2ECC71>{count}</#2ECC71> <#7F8C8D>items waiting</#7F8C8D>"
+  claimed-item: "<#2ECC71>●</#2ECC71> <#ECF0F1>Claimed</#ECF0F1> <#FFFFFF>{item}</#FFFFFF> <#7F8C8D>x{quantity}</#7F8C8D>"
+  no-items: "<#7F8C8D>○</#7F8C8D> <#BDC3C7>Mailbox empty</#BDC3C7>"
+  items-waiting: "<#F5A623>📬</#F5A623> <#ECF0F1>Mailbox</#ECF0F1> <#7F8C8D>›</#7F8C8D> <#2ECC71>{count}</#2ECC71> <#7F8C8D>items waiting</#7F8C8D>"
+  claimed-all: "<#2ECC71>●</#2ECC71> <#ECF0F1>Claimed</#ECF0F1> <#2ECC71>{count}</#2ECC71> <#7F8C8D>items</#7F8C8D>"
+  item-not-found: "<#E74C3C>●</#E74C3C> <#ECF0F1>Item not found in mailbox</#ECF0F1>"
+  not-your-item: "<#E74C3C>●</#E74C3C> <#ECF0F1>This item doesn't belong to you</#ECF0F1>"
+  already-claimed: "<#E74C3C>●</#E74C3C> <#ECF0F1>Item already claimed</#ECF0F1>"
+  item-expired: "<#E74C3C>●</#E74C3C> <#ECF0F1>This item has expired</#ECF0F1>"
+  claim-failed: "<#E74C3C>●</#E74C3C> <#ECF0F1>Failed to claim item</#ECF0F1>"
+  inventory-full: "<#E74C3C>●</#E74C3C> <#ECF0F1>Your inventory is full</#ECF0F1>"
+  deposit-failed: "<#E74C3C>●</#E74C3C> <#ECF0F1>Failed to deposit money</#ECF0F1>"
+  money-claimed: "<#2ECC71>●</#2ECC71> <#ECF0F1>Claimed</#ECF0F1> <#F5A623>{amount}</#F5A623>"
+  item-claimed: "<#2ECC71>●</#2ECC71> <#ECF0F1>Claimed</#ECF0F1> <#FFFFFF>{item}</#FFFFFF> <#7F8C8D>x{quantity}</#7F8C8D>"
 
 # ════════════════════════════════════════════════════════════════════════════════
 # GUI MESSAGES - Modern Hex Colors (no legacy codes)
@@ -155,7 +172,6 @@ gui:
   my-listings-title: "&#3498DBᴍʏ ʟɪsᴛɪɴɢs"
   mailbox-title: "&#2ECC71ᴍᴀɪʟʙᴏx"
   history-title: "&#9B59B6ʜɪsᴛᴏʀʏ"
-  search-title: "&#3498DBsᴇᴀʀᴄʜ"
 
   control-items:
     previous-page: "&#2ECC71‹ ᴘʀᴇᴠ"
@@ -189,14 +205,6 @@ gui:
       - ""
       - "&#F5A623Click to change"
 
-    search: "&#3498DB◎ sᴇᴀʀᴄʜ"
-    search-lore:
-      - ""
-      - "&#BDC3C7Find specific items"
-      - ""
-      - "&#7F8C8DCurrent: &#ECF0F1{query}"
-      - ""
-      - "&#3498DBClick to search"
 
     my-listings: "&#E67E22◈ ᴍʏ ʟɪsᴛɪɴɢs"
     my-listings-lore:
@@ -241,7 +249,7 @@ gui:
     - "&#7F8C8DSeller       &#ECF0F1{seller}"
     - "&#7F8C8DQuantity     &#ECF0F1{quantity}x"
     - ""
-    - "&#2C3E50─────── ᴘʀɪᴄɪɴɢ ───────"
+    - "&#2C3E50─────── ᴘʀɪᴄɪɴɡ ───────"
     - "&#7F8C8DStart Bid    &#F5A623{starting_price}"
     - "&#7F8C8DCurrent Bid  &#F5A623{current_bid}"
     - "&#7F8C8DBuy Now      {buy_now_display}"
@@ -272,7 +280,7 @@ gui:
     - ""
     - "&#7F8C8DQuantity     &#ECF0F1{quantity}x"
     - ""
-    - "&#2C3E50─────── ᴘʀɪᴄɪɴɢ ───────"
+    - "&#2C3E50─────── ᴘʀɪᴄɪɴɡ ───────"
     - "&#7F8C8DStart Bid    &#F5A623{starting_price}"
     - "&#7F8C8DCurrent Bid  &#F5A623{current_bid}"
     - "&#7F8C8DBuy Now      {buy_now_display}"

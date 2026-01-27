@@ -14,3 +14,4 @@ public class StorageFactory {
         return new JsonTransactionStorage(plugin);
     }
 }
+

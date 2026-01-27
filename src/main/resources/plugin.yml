@@ -1,5 +1,5 @@
 name: PlayerAuctions
-version: 2.5.2
+version: 2.5.4
 main: com.minekarta.playerauction.PlayerAuction
 author: MinekartaStudio
 api-version: '1.21'
@@ -38,15 +38,11 @@ permissions:
     default: op
     children:
       playerauctions.reload: true
-      playerauctions.search: true
       playerauctions.categories: true
       playerauctions.notify: true
       playerauctions.history: true
       playerauctions.history.others: true
 
-  playerauctions.search:
-    description: Allows using /ah search.
-    default: true
   playerauctions.categories:
     description: Allows using /ah categories.
     default: true

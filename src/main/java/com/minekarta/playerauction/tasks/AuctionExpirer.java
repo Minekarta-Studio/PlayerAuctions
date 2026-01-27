@@ -16,3 +16,4 @@ public class AuctionExpirer extends BukkitRunnable {
         auctionService.processExpiredAuctions();
     }
 }
+

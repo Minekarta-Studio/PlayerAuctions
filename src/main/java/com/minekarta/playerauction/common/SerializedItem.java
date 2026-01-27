@@ -61,3 +61,4 @@ public final class SerializedItem implements Serializable {
         return "SerializedItem{data='...'}";
     }
 }
+

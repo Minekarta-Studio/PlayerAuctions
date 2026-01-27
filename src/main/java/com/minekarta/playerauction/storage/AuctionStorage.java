@@ -23,12 +23,12 @@ public interface AuctionStorage {
     /**
      * Finds a list of active auctions with filtering and sorting.
      */
-    CompletableFuture<List<Auction>> findActive(int limit, int offset, AuctionCategory category, SortOrder sortOrder, String searchQuery);
+    CompletableFuture<List<Auction>> findActive(int limit, int offset, AuctionCategory category, SortOrder sortOrder);
 
     /**
      * Finds a list of active auctions with pagination support.
      */
-    CompletableFuture<List<Auction>> findActiveAuctions(int page, int limit, AuctionCategory category, SortOrder sortOrder, String searchQuery);
+    CompletableFuture<List<Auction>> findActiveAuctions(int page, int limit, AuctionCategory category, SortOrder sortOrder);
 
     /**
      * Finds auctions listed by a specific seller.
@@ -71,10 +71,5 @@ public interface AuctionStorage {
      * Finds a batch of auctions that have expired as of a given timestamp.
      */
     CompletableFuture<List<Auction>> findExpiredUpTo(long nowEpochMillis, int batchSize);
-
-    /**
-     * Counts the number of active auctions with the same filters as findActive/findActiveAuctions.
-     * This is used for accurate pagination when category/search is applied.
-     */
-    CompletableFuture<Integer> countActiveAuctions(AuctionCategory category, SortOrder sortOrder, String searchQuery);
 }
+

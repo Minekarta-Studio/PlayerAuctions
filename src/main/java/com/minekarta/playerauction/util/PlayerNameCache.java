@@ -73,3 +73,4 @@ public class PlayerNameCache {
         nameCache.invalidate(uuid);
     }
 }
+

@@ -5,11 +5,14 @@ import com.minekarta.playerauction.commands.AuctionCommand;
 import com.minekarta.playerauction.commands.AuctionTabCompleter;
 import com.minekarta.playerauction.config.ConfigManager;
 import com.minekarta.playerauction.economy.EconomyRouter;
+import com.minekarta.playerauction.mailbox.JsonMailboxStorage;
+import com.minekarta.playerauction.mailbox.MailboxService;
+import com.minekarta.playerauction.mailbox.MailboxStorage;
+import com.minekarta.playerauction.notification.BroadcastManager;
 import com.minekarta.playerauction.storage.AuctionStorage;
 import com.minekarta.playerauction.storage.StorageFactory;
 import com.minekarta.playerauction.tasks.AuctionExpirer;
 import com.minekarta.playerauction.util.PlayerNameCache;
-import com.minekarta.playerauction.util.SearchManager;
 import com.minekarta.playerauction.notification.NotificationManager;
 import com.minekarta.playerauction.transaction.TransactionLogger;
 import com.minekarta.playerauction.storage.TransactionStorage;
@@ -24,13 +27,14 @@ public class PlayerAuction extends JavaPlugin {
 
     private ExecutorService asyncExecutor;
     private AuctionService auctionService;
+    private MailboxService mailboxService;
     private EconomyRouter economyRouter;
     private ConfigManager configManager;
     private PlayerNameCache playerNameCache;
     private NotificationManager notificationManager;
+    private BroadcastManager broadcastManager;
     private TransactionLogger transactionLogger;
     private PlayerSettingsService playerSettingsService;
-    private SearchManager searchManager;
 
     @Override
     public void onEnable() {
@@ -41,6 +45,7 @@ public class PlayerAuction extends JavaPlugin {
         // Initialize Services
         playerSettingsService = new PlayerSettingsService(this);
         notificationManager = new NotificationManager(this, configManager, playerSettingsService);
+        broadcastManager = new BroadcastManager(this, configManager);
 
         // 2. Setup Thread Pool
         asyncExecutor = Executors.newFixedThreadPool(
@@ -51,11 +56,13 @@ public class PlayerAuction extends JavaPlugin {
         // 3. Initialize JSON Storage
         AuctionStorage auctionStorage = StorageFactory.createAuctionStorage(this);
         TransactionStorage transactionStorage = StorageFactory.createTransactionStorage(this);
+        MailboxStorage mailboxStorage = new JsonMailboxStorage(this);
 
         // Initialize storage async
         asyncExecutor.submit(() -> {
             auctionStorage.init();
             transactionStorage.init();
+            mailboxStorage.init();
         });
 
         // 4. Initialize Economy
@@ -69,7 +76,8 @@ public class PlayerAuction extends JavaPlugin {
         // 5. Initialize Caches & Services
         playerNameCache = new PlayerNameCache(asyncExecutor);
         transactionLogger = new TransactionLogger(transactionStorage);
-        auctionService = new AuctionService(this, asyncExecutor, auctionStorage, economyRouter, configManager, notificationManager, transactionLogger);
+        mailboxService = new MailboxService(this, mailboxStorage, economyRouter);
+        auctionService = new AuctionService(this, asyncExecutor, auctionStorage, economyRouter, configManager, notificationManager, transactionLogger, mailboxService);
 
         // 6. Register Commands & Listeners
         AuctionCommand commandExecutor = new AuctionCommand(this, auctionService, configManager, playerSettingsService);
@@ -85,20 +93,16 @@ public class PlayerAuction extends JavaPlugin {
         // 7. Start Tasks
         new AuctionExpirer(auctionService).runTaskTimerAsynchronously(this, 20 * 30, 20 * 30); // Every 30 seconds
 
-        // 8. Initialize Search Manager
-        this.searchManager = new SearchManager(this);
-        getLogger().info("SearchManager initialized");
+        // 8. Start Mailbox Cleanup Task (runs every hour)
+        getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
+            mailboxService.cleanupExpiredItems();
+        }, 20 * 60 * 60, 20 * 60 * 60); // Every hour
 
         getLogger().info("PlayerAuctions has been enabled!");
     }
 
     @Override
     public void onDisable() {
-        // Cleanup search sessions
-        if (searchManager != null) {
-            searchManager.clearAllSessions();
-        }
-
         if (asyncExecutor != null) {
             asyncExecutor.shutdownNow();
         }
@@ -107,12 +111,13 @@ public class PlayerAuction extends JavaPlugin {
 
     // Public getters for services if needed by other parts of the plugin (e.g., GUIs)
     public AuctionService getAuctionService() { return auctionService; }
+    public MailboxService getMailboxService() { return mailboxService; }
     public EconomyRouter getEconomyRouter() { return economyRouter; }
     public ConfigManager getConfigManager() { return configManager; }
     public PlayerNameCache getPlayerNameCache() { return playerNameCache; }
     public NotificationManager getNotificationManager() { return notificationManager; }
+    public BroadcastManager getBroadcastManager() { return broadcastManager; }
     public TransactionLogger getTransactionLogger() { return transactionLogger; }
     public PlayerSettingsService getPlayerSettingsService() { return playerSettingsService; }
     public ExecutorService getAsyncExecutor() { return asyncExecutor; }
-    public SearchManager getSearchManager() { return searchManager; }
 }

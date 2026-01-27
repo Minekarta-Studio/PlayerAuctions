@@ -46,6 +46,11 @@ public class ConfigManager {
     public String getMessage(String path, String... replacements) {
         String message = messages.getString(path, "&cMissing message: " + path);
 
+        // Handle null or empty replacements array to prevent NullPointerException
+        if (replacements == null || replacements.length == 0) {
+            return MessageParser.parseToLegacy(message);
+        }
+
         // Apply manual replacements first (BEFORE parsing to avoid format conflicts)
         for (int i = 0; i < replacements.length; i += 2) {
             if (i + 1 < replacements.length) {
@@ -276,3 +281,4 @@ public class ConfigManager {
         return getComponent(path, null);
     }
 }
+

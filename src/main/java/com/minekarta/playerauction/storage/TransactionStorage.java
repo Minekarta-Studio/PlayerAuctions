@@ -28,3 +28,4 @@ public interface TransactionStorage {
      */
     CompletableFuture<List<Transaction>> findTransactionsByPlayer(UUID playerId, int limit, int offset);
 }
+

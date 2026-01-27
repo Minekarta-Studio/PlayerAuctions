@@ -76,7 +76,7 @@ public class SQLiteAuctionStorage implements AuctionStorage {
     }
 
     @Override
-    public CompletableFuture<List<Auction>> findActive(int limit, int offset, AuctionCategory category, SortOrder sortOrder, String searchQuery) {
+    public CompletableFuture<List<Auction>> findActive(int limit, int offset, AuctionCategory category, SortOrder sortOrder) {
         return CompletableFuture.supplyAsync(() -> {
             List<Auction> auctions = new ArrayList<>();
 
@@ -89,13 +89,7 @@ public class SQLiteAuctionStorage implements AuctionStorage {
                 params.add(category.name());
             }
 
-            // Add search filter if specified
-            if (searchQuery != null && !searchQuery.trim().isEmpty()) {
-                sql.append(" AND (item_type LIKE ? OR item_name LIKE ?)");
-                String searchPattern = "%" + searchQuery.toLowerCase() + "%";
-                params.add(searchPattern);
-                params.add(searchPattern);
-            }
+            
 
             // Add sorting
             sql.append(" ORDER BY ");
@@ -138,8 +132,8 @@ public class SQLiteAuctionStorage implements AuctionStorage {
     }
 
     @Override
-    public CompletableFuture<List<Auction>> findActiveAuctions(int page, int limit, AuctionCategory category, SortOrder sortOrder, String searchQuery) {
-        return findActive(limit, (page - 1) * limit, category, sortOrder, searchQuery);
+    public CompletableFuture<List<Auction>> findActiveAuctions(int page, int limit, AuctionCategory category, SortOrder sortOrder) {
+        return findActive(limit, (page - 1) * limit, category, sortOrder);
     }
 
     @Override
@@ -287,43 +281,7 @@ public class SQLiteAuctionStorage implements AuctionStorage {
         }, executor);
     }
 
-    @Override
-    public CompletableFuture<Integer> countActiveAuctions(AuctionCategory category, SortOrder sortOrder, String searchQuery) {
-        return CompletableFuture.supplyAsync(() -> {
-            StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM auctions WHERE status = 'ACTIVE'");
-            List<Object> params = new ArrayList<>();
-
-            if (category != AuctionCategory.ALL) {
-                sql.append(" AND item_type = ?");
-                params.add(category.name());
-            }
-
-            if (searchQuery != null && !searchQuery.trim().isEmpty()) {
-                sql.append(" AND (LOWER(item_type) LIKE ? OR LOWER(item_name) LIKE ?)");
-                String searchPattern = "%" + searchQuery.trim().toLowerCase() + "%";
-                params.add(searchPattern);
-                params.add(searchPattern);
-            }
-
-            try (Connection conn = getConnection();
-                 PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-
-                for (int i = 0; i < params.size(); i++) {
-                    ps.setObject(i + 1, params.get(i));
-                }
-
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
-                        return rs.getInt(1);
-                    }
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-
-            return 0;
-        }, executor);
-    }
+    
 
     private Auction mapRowToAuction(ResultSet rs) throws SQLException {
         return new Auction(
@@ -384,3 +342,5 @@ public class SQLiteAuctionStorage implements AuctionStorage {
     private static final String FIND_EXPIRED = "SELECT * FROM auctions WHERE status = 'ACTIVE' AND end_at <= ? LIMIT ?;";
     private static final String UPDATE_AUCTION_VERSIONED = "UPDATE auctions SET status = ?, version = ? WHERE auction_id = ? AND version = ?;";
 }
+
+

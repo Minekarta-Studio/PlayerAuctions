@@ -88,3 +88,4 @@ public class VaultEconomyService implements EconomyService {
         return future;
     }
 }
+

@@ -21,7 +21,7 @@ public class MainAuctionGui extends PaginatedGui {
     private final PlayerAuction kah;
     private List<Auction> auctions;
     private final SortOrder sortOrder;
-    private final String searchQuery;
+    
 
     // ✅ FIX: Available slots for auction items (avoiding borders and controls)
     // GUI Layout (54 slots = 6 rows × 9 columns):
@@ -41,11 +41,11 @@ public class MainAuctionGui extends PaginatedGui {
 
     private static final int ITEMS_PER_PAGE = AUCTION_SLOTS.length; // 28 items per page
 
-    public MainAuctionGui(PlayerAuction plugin, Player player, int page, SortOrder sortOrder, String searchQuery) {
+    public MainAuctionGui(PlayerAuction plugin, Player player, int page, SortOrder sortOrder) {
         super(plugin, player, page, ITEMS_PER_PAGE);
         this.kah = plugin;
         this.sortOrder = sortOrder;
-        this.searchQuery = searchQuery;
+        
         // Mark as async GUI - we'll call openInventory() after build completes
         setAsync(true);
     }
@@ -80,22 +80,17 @@ public class MainAuctionGui extends PaginatedGui {
 
     @Override
     protected String getTitle() {
-        return kah.getConfigManager().getConfig().getString("gui.title-main", "&6PlayerAuctions").replace("&", "§");
+        return kah.getConfigManager().getMessage("gui.main-title");
     }
 
     @Override
     protected void build() {
         // Get auctions for the current page and player balance
-        CompletableFuture<List<Auction>> pageAuctionsFuture = kah.getAuctionService().getActiveAuctions(page, itemsPerPage, AuctionCategory.ALL, sortOrder, searchQuery);
+        CompletableFuture<List<Auction>> pageAuctionsFuture = kah.getAuctionService().getActiveAuctions(page, itemsPerPage, AuctionCategory.ALL, sortOrder);
         CompletableFuture<Double> balanceFuture = kah.getEconomyRouter().getService().getBalance(player.getUniqueId());
 
-        // Use filtered count when search is active (accurate pagination for search results)
-        CompletableFuture<Integer> totalCountFuture;
-        if (searchQuery != null && !searchQuery.trim().isEmpty()) {
-            totalCountFuture = kah.getAuctionService().getActiveAuctionCount(AuctionCategory.ALL, sortOrder, searchQuery);
-        } else {
-            totalCountFuture = kah.getAuctionService().getTotalActiveAuctionCount();
-        }
+        // Use total count for pagination (no filtering)
+        CompletableFuture<Integer> totalCountFuture = kah.getAuctionService().getTotalActiveAuctionCount();
 
         // Combine all futures
         pageAuctionsFuture.thenCombine(balanceFuture, (fetchedAuctions, balance) -> {
@@ -177,24 +172,6 @@ public class MainAuctionGui extends PaginatedGui {
         sortLore.add("&#F5A623Click to change");
         inventory.setItem(47, new GuiItemBuilder(Material.COMPARATOR).setName(sortName).setLore(sortLore).build());
 
-        // Search Button (Slot 48)
-        PlaceholderContext searchContext = new PlaceholderContext()
-            .addPlaceholder("query", searchQuery != null ? searchQuery : "None");
-        String searchName = kah.getConfigManager().getMessage("gui.control-items.search", searchContext);
-        List<String> searchLore = new ArrayList<>();
-        searchLore.add("");
-        if (searchQuery != null && !searchQuery.isEmpty()) {
-            searchLore.add("&#BDC3C7Searching for:");
-            searchLore.add("&#F1C40F\"" + searchQuery + "\"");
-            searchLore.add("");
-            searchLore.add("&#E67E22Click to modify");
-            searchLore.add("&#7F8C8DRight-click to clear");
-        } else {
-            searchLore.add("&#BDC3C7Find specific items");
-            searchLore.add("");
-            searchLore.add("&#3498DBClick to search");
-        }
-        inventory.setItem(48, new GuiItemBuilder(Material.COMPASS).setName(searchName).setLore(searchLore).build());
 
         // My Listings Button (Slot 50)
         String myListingsName = kah.getConfigManager().getMessage("gui.control-items.my-listings", null);
@@ -460,7 +437,7 @@ public class MainAuctionGui extends PaginatedGui {
                             player.sendMessage(kah.getConfigManager().getPrefixedMessage("errors.buy-fail"));
                         }
                         // Always refresh GUI to show current state
-                        new MainAuctionGui(kah, player, page, sortOrder, searchQuery).open();
+                        new MainAuctionGui(kah, player, page, sortOrder).open();
                     });
                 } else {
                     // Insufficient funds
@@ -473,22 +450,11 @@ public class MainAuctionGui extends PaginatedGui {
         }
 
         // Handle custom control clicks matching the slot layout:
-        // [47] Sort | [48] Search | [49] Profile | [50] MyListings | [51] Mailbox
+        // [47] Sort | [48] Empty | [49] Profile | [50] MyListings | [51] Mailbox
 
         if (slot == 47) { // Sort button
             SortOrder nextSortOrder = sortOrder.next();
-            new MainAuctionGui(kah, player, 1, nextSortOrder, searchQuery).open();
-        } else if (slot == 48) { // Search button
-            if (event.isRightClick() && searchQuery != null && !searchQuery.isEmpty()) {
-                // Right-click to clear search
-                new MainAuctionGui(kah, player, 1, sortOrder, null).open();
-            } else {
-                // Left-click to start search session
-                // Start session first (so even if GUI closes immediately, chat capture is active)
-                kah.getSearchManager().startSearchSession(player, sortOrder);
-                // Close inventory on next tick for better reliability with click handler timing
-                kah.getServer().getScheduler().runTask(kah, () -> player.closeInventory());
-            }
+            new MainAuctionGui(kah, player, 1, nextSortOrder).open();
         } else if (slot == 50) { // My Listings button
             new MyListingsGui(kah, player, 1).open();
         } else if (slot == 51) { // Mailbox button
@@ -498,7 +464,7 @@ public class MainAuctionGui extends PaginatedGui {
 
     @Override
     protected void openPage(int newPage) {
-        new MainAuctionGui(kah, player, newPage, sortOrder, searchQuery).open();
+        new MainAuctionGui(kah, player, newPage, sortOrder).open();
     }
 
     @Override
@@ -506,3 +472,8 @@ public class MainAuctionGui extends PaginatedGui {
         return sortOrder.getDisplayName();
     }
 }
+
+
+
+
+

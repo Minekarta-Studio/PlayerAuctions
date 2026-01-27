@@ -10,6 +10,14 @@ auction:
   tax-percentage: 5
   notification-methods: [chat, actionbar, title, sound]
 
+  # Broadcast Settings - Announce auction events to all players
+  broadcast:
+    enabled: true  # Enable/disable broadcast notifications
+    on-listing: true  # Broadcast when player lists an item
+    on-purchase: true  # Broadcast when someone purchases an item
+    # Broadcast range: GLOBAL (all players), WORLD (same world only), NONE (disabled)
+    range: GLOBAL
+
 # --- Economy Settings ---
 economy:
   # Preferred economy provider. Options: KARTAEMERALDCURRENCY, VAULT

@@ -69,3 +69,4 @@ public class KartaEmeraldEconomyService implements EconomyService {
         return CompletableFuture.completedFuture(0.0);
     }
 }
+

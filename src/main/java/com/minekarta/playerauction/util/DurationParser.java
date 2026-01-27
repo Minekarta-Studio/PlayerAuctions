@@ -48,3 +48,4 @@ public final class DurationParser {
         return foundMatch ? Optional.of(totalMillis) : Optional.empty();
     }
 }
+

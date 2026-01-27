@@ -38,3 +38,4 @@ public class TransactionLogger {
         return transactionStorage.findTransactionsByPlayer(playerId, pageSize, (page - 1) * pageSize);
     }
 }
+

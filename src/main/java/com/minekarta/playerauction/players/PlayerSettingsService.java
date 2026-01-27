@@ -27,3 +27,4 @@ public class PlayerSettingsService {
         data.set(notificationsEnabledKey, PersistentDataType.BYTE, enabled ? (byte) 1 : (byte) 0);
     }
 }
+
