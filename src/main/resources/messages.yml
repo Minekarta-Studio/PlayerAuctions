@@ -26,7 +26,7 @@
 # ════════════════════════════════════════
 # PREFIX
 # ════════════════════════════════════════
-prefix: "<#F5A623><bold>PA</bold></#F5A623> <#2C3E50>›</#2C3E50> "
+prefix: "<#F5A623><bold>PlayerAuctions</bold></#F5A623> <#2C3E50>›</#2C3E50> "
 
 # ════════════════════════════════════════
 # AUCTION MESSAGES
@@ -238,20 +238,14 @@ gui:
     - "<#2C3E50>━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     - "<#7F8C8D>         ᴀᴜᴄᴛɪᴏɴ ᴅᴇᴛᴀɪʟs"
     - "<#2C3E50>━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    - ""
     - "<#7F8C8D>Seller       <#ECF0F1>{seller}"
     - "<#7F8C8D>Quantity     <#ECF0F1>{quantity}x"
-    - ""
     - "<#2C3E50>─────── ᴘʀɪᴄɪɴɡ ───────"
     - "<#7F8C8D>Price        <#F5A623>{starting_price}"
-    - "<#7F8C8D>Buy Now      {buy_now_display}"
-    - "<#7F8C8D>Reserve      {reserve_display}"
-    - ""
     - "<#2C3E50>─────── ᴛɪᴍᴇ ───────"
     - "<#7F8C8D>Listed       <#BDC3C7>{listed_date}"
     - "<#7F8C8D>Ends in      {time_color}{time_left}"
     - "<#7F8C8D>Duration     <#BDC3C7>{duration}"
-    - ""
     - "<#7F8C8D>Status       {status_color}{status}"
     - "<#2C3E50>━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
@@ -265,14 +259,9 @@ gui:
     - "<#2C3E50>━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     - "<#7F8C8D>        ʏᴏᴜʀ ʟɪsᴛɪɴɢ"
     - "<#2C3E50>━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    - ""
     - "<#7F8C8D>Quantity     <#ECF0F1>{quantity}x"
-    - ""
     - "<#2C3E50>─────── ᴘʀɪᴄɪɴɡ ───────"
     - "<#7F8C8D>Price        <#F5A623>{starting_price}"
-    - "<#7F8C8D>Buy Now      {buy_now_display}"
-    - "<#7F8C8D>Reserve      {reserve_display}"
-    - ""
     - "<#2C3E50>─────── ᴛɪᴍᴇ ───────"
     - "<#7F8C8D>Listed       <#BDC3C7>{listed_date}"
     - "<#7F8C8D>Ends in      {time_color}{time_left}"

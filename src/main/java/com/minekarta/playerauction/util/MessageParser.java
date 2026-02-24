@@ -47,14 +47,19 @@ public class MessageParser {
             return Component.empty();
         }
 
+        Component parsed;
         // Detect format type and parse accordingly
         if (isMiniMessage(message)) {
-            return parseMiniMessage(message);
+            parsed = parseMiniMessage(message);
         } else if (hasHexOrRgb(message)) {
-            return parseHexAndRgb(message);
+            parsed = parseHexAndRgb(message);
         } else {
-            return parseLegacy(message);
+            parsed = parseLegacy(message);
         }
+
+        // Remove default italic formatting (especially for item names and lore)
+        return Component.empty().decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false)
+                .append(parsed);
     }
 
     /**
