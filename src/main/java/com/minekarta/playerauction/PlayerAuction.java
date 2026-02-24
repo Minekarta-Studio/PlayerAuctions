@@ -2,7 +2,7 @@ package com.minekarta.playerauction;
 
 import com.minekarta.playerauction.auction.AuctionService;
 import com.minekarta.playerauction.commands.AuctionCommand;
-import com.minekarta.playerauction.commands.AuctionTabCompleter;
+import com.minekarta.playerauction.commands.AdminCommand;
 import com.minekarta.playerauction.config.ConfigManager;
 import com.minekarta.playerauction.economy.EconomyRouter;
 import com.minekarta.playerauction.mailbox.JsonMailboxStorage;
@@ -18,12 +18,17 @@ import com.minekarta.playerauction.transaction.TransactionLogger;
 import com.minekarta.playerauction.storage.TransactionStorage;
 import com.minekarta.playerauction.players.PlayerSettingsService;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.command.CommandSender;
+import org.incendo.cloud.paper.LegacyPaperCommandManager;
+import org.incendo.cloud.execution.ExecutionCoordinator;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 public class PlayerAuction extends JavaPlugin {
+
+    private LegacyPaperCommandManager<CommandSender> commandManager;
 
     private ExecutorService asyncExecutor;
     private AuctionService auctionService;
@@ -49,9 +54,8 @@ public class PlayerAuction extends JavaPlugin {
 
         // 2. Setup Thread Pool
         asyncExecutor = Executors.newFixedThreadPool(
-            Runtime.getRuntime().availableProcessors(),
-            new ThreadFactoryBuilder().setNameFormat("PlayerAuction-Worker-%d").build()
-        );
+                Runtime.getRuntime().availableProcessors(),
+                new ThreadFactoryBuilder().setNameFormat("PlayerAuction-Worker-%d").build());
 
         // 3. Initialize JSON Storage
         AuctionStorage auctionStorage = StorageFactory.createAuctionStorage(this);
@@ -77,18 +81,31 @@ public class PlayerAuction extends JavaPlugin {
         playerNameCache = new PlayerNameCache(asyncExecutor);
         transactionLogger = new TransactionLogger(transactionStorage);
         mailboxService = new MailboxService(this, mailboxStorage, economyRouter);
-        auctionService = new AuctionService(this, asyncExecutor, auctionStorage, economyRouter, configManager, notificationManager, transactionLogger, mailboxService);
+        auctionService = new AuctionService(this, asyncExecutor, auctionStorage, economyRouter, configManager,
+                notificationManager, transactionLogger, mailboxService);
 
         // 6. Register Commands & Listeners
-        AuctionCommand commandExecutor = new AuctionCommand(this, auctionService, configManager, playerSettingsService);
-        AuctionTabCompleter tabCompleter = new AuctionTabCompleter(this);
+        try {
+            commandManager = new LegacyPaperCommandManager<>(
+                    this,
+                    ExecutionCoordinator.simpleCoordinator(),
+                    org.incendo.cloud.SenderMapper.identity());
+            // Register brigadier if possible
+            if (commandManager.hasCapability(org.incendo.cloud.bukkit.CloudBukkitCapabilities.BRIGADIER)) {
+                commandManager.registerBrigadier();
+            } else if (commandManager
+                    .hasCapability(org.incendo.cloud.bukkit.CloudBukkitCapabilities.ASYNCHRONOUS_COMPLETION)) {
+                commandManager.registerAsynchronousCompletions();
+            }
+        } catch (Exception e) {
+            getLogger().severe("Failed to initialize Cloud Command Framework:");
+            e.printStackTrace();
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
 
-        this.getCommand("ah").setExecutor(commandExecutor);
-        this.getCommand("ah").setTabCompleter(tabCompleter);
-        this.getCommand("auction").setExecutor(commandExecutor);
-        this.getCommand("auction").setTabCompleter(tabCompleter);
-        this.getCommand("auctionhouse").setExecutor(commandExecutor);
-        this.getCommand("auctionhouse").setTabCompleter(tabCompleter);
+        new AuctionCommand(this, commandManager, auctionService, configManager, playerSettingsService);
+        new AdminCommand(this, commandManager, configManager);
 
         // 7. Start Tasks
         new AuctionExpirer(auctionService).runTaskTimerAsynchronously(this, 20 * 30, 20 * 30); // Every 30 seconds
@@ -109,15 +126,45 @@ public class PlayerAuction extends JavaPlugin {
         getLogger().info("PlayerAuctions has been disabled!");
     }
 
-    // Public getters for services if needed by other parts of the plugin (e.g., GUIs)
-    public AuctionService getAuctionService() { return auctionService; }
-    public MailboxService getMailboxService() { return mailboxService; }
-    public EconomyRouter getEconomyRouter() { return economyRouter; }
-    public ConfigManager getConfigManager() { return configManager; }
-    public PlayerNameCache getPlayerNameCache() { return playerNameCache; }
-    public NotificationManager getNotificationManager() { return notificationManager; }
-    public BroadcastManager getBroadcastManager() { return broadcastManager; }
-    public TransactionLogger getTransactionLogger() { return transactionLogger; }
-    public PlayerSettingsService getPlayerSettingsService() { return playerSettingsService; }
-    public ExecutorService getAsyncExecutor() { return asyncExecutor; }
+    // Public getters for services if needed by other parts of the plugin (e.g.,
+    // GUIs)
+    public AuctionService getAuctionService() {
+        return auctionService;
+    }
+
+    public MailboxService getMailboxService() {
+        return mailboxService;
+    }
+
+    public EconomyRouter getEconomyRouter() {
+        return economyRouter;
+    }
+
+    public ConfigManager getConfigManager() {
+        return configManager;
+    }
+
+    public PlayerNameCache getPlayerNameCache() {
+        return playerNameCache;
+    }
+
+    public NotificationManager getNotificationManager() {
+        return notificationManager;
+    }
+
+    public BroadcastManager getBroadcastManager() {
+        return broadcastManager;
+    }
+
+    public TransactionLogger getTransactionLogger() {
+        return transactionLogger;
+    }
+
+    public PlayerSettingsService getPlayerSettingsService() {
+        return playerSettingsService;
+    }
+
+    public ExecutorService getAsyncExecutor() {
+        return asyncExecutor;
+    }
 }

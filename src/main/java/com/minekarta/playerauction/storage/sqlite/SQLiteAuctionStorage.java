@@ -61,7 +61,7 @@ public class SQLiteAuctionStorage implements AuctionStorage {
     public CompletableFuture<Optional<Auction>> findById(UUID id) {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection conn = getConnection();
-                 PreparedStatement ps = conn.prepareStatement(FIND_BY_ID)) {
+                    PreparedStatement ps = conn.prepareStatement(FIND_BY_ID)) {
                 ps.setString(1, id.toString());
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
@@ -76,7 +76,8 @@ public class SQLiteAuctionStorage implements AuctionStorage {
     }
 
     @Override
-    public CompletableFuture<List<Auction>> findActive(int limit, int offset, AuctionCategory category, SortOrder sortOrder) {
+    public CompletableFuture<List<Auction>> findActive(int limit, int offset, AuctionCategory category,
+            SortOrder sortOrder) {
         return CompletableFuture.supplyAsync(() -> {
             List<Auction> auctions = new ArrayList<>();
 
@@ -88,8 +89,6 @@ public class SQLiteAuctionStorage implements AuctionStorage {
                 sql.append(" AND item_type = ?");
                 params.add(category.name());
             }
-
-            
 
             // Add sorting
             sql.append(" ORDER BY ");
@@ -113,7 +112,7 @@ public class SQLiteAuctionStorage implements AuctionStorage {
             params.add(offset);
 
             try (Connection conn = getConnection();
-                 PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+                    PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
                 for (int i = 0; i < params.size(); i++) {
                     ps.setObject(i + 1, params.get(i));
@@ -132,7 +131,8 @@ public class SQLiteAuctionStorage implements AuctionStorage {
     }
 
     @Override
-    public CompletableFuture<List<Auction>> findActiveAuctions(int page, int limit, AuctionCategory category, SortOrder sortOrder) {
+    public CompletableFuture<List<Auction>> findActiveAuctions(int page, int limit, AuctionCategory category,
+            SortOrder sortOrder) {
         return findActive(limit, (page - 1) * limit, category, sortOrder);
     }
 
@@ -141,7 +141,7 @@ public class SQLiteAuctionStorage implements AuctionStorage {
         return CompletableFuture.supplyAsync(() -> {
             List<Auction> auctions = new ArrayList<>();
             try (Connection conn = getConnection();
-                 PreparedStatement ps = conn.prepareStatement(FIND_BY_SELLER)) {
+                    PreparedStatement ps = conn.prepareStatement(FIND_BY_SELLER)) {
                 ps.setString(1, seller.toString());
                 ps.setInt(2, limit);
                 ps.setInt(3, offset);
@@ -162,7 +162,7 @@ public class SQLiteAuctionStorage implements AuctionStorage {
         return CompletableFuture.supplyAsync(() -> {
             List<Auction> auctions = new ArrayList<>();
             try (Connection conn = getConnection();
-                 PreparedStatement ps = conn.prepareStatement(FIND_PLAYER_HISTORY)) {
+                    PreparedStatement ps = conn.prepareStatement(FIND_PLAYER_HISTORY)) {
                 ps.setString(1, playerId.toString());
                 ps.setInt(2, limit);
                 ps.setInt(3, (page - 1) * limit);
@@ -182,7 +182,7 @@ public class SQLiteAuctionStorage implements AuctionStorage {
     public CompletableFuture<Integer> countActiveBySeller(UUID sellerId) {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection conn = getConnection();
-                 PreparedStatement ps = conn.prepareStatement(COUNT_ACTIVE_BY_SELLER)) {
+                    PreparedStatement ps = conn.prepareStatement(COUNT_ACTIVE_BY_SELLER)) {
                 ps.setString(1, sellerId.toString());
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
@@ -205,7 +205,45 @@ public class SQLiteAuctionStorage implements AuctionStorage {
     public CompletableFuture<Integer> countAllActiveAuctions() {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection conn = getConnection();
-                 PreparedStatement ps = conn.prepareStatement(COUNT_ALL_ACTIVE)) {
+                    PreparedStatement ps = conn.prepareStatement(COUNT_ALL_ACTIVE)) {
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getInt(1);
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            return 0;
+        }, executor);
+    }
+
+    @Override
+    public CompletableFuture<Integer> countActiveAuctions(AuctionCategory category, SortOrder sortOrder,
+            String searchQuery) {
+        return CompletableFuture.supplyAsync(() -> {
+            StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM auctions WHERE status = 'ACTIVE'");
+            List<Object> params = new ArrayList<>();
+
+            if (category != AuctionCategory.ALL) {
+                sql.append(" AND item_type = ?");
+                params.add(category.name());
+            }
+
+            if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+                sql.append(" AND (LOWER(item_type) LIKE ? OR LOWER(item_name) LIKE ?)");
+                String likeQuery = "%" + searchQuery.trim().toLowerCase() + "%";
+                params.add(likeQuery);
+                params.add(likeQuery);
+            }
+
+            try (Connection conn = getConnection();
+                    PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+                for (int i = 0; i < params.size(); i++) {
+                    ps.setObject(i + 1, params.get(i));
+                }
+
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
                         return rs.getInt(1);
@@ -222,13 +260,15 @@ public class SQLiteAuctionStorage implements AuctionStorage {
     public CompletableFuture<Void> insertAuction(Auction a) {
         return CompletableFuture.runAsync(() -> {
             try (Connection conn = getConnection();
-                 PreparedStatement ps = conn.prepareStatement(INSERT_AUCTION)) {
+                    PreparedStatement ps = conn.prepareStatement(INSERT_AUCTION)) {
                 ps.setString(1, a.id().toString());
                 ps.setString(2, a.seller().toString());
                 ps.setString(3, a.item().getBase64());
                 ps.setString(4, a.item().toItemStack().getType().name());
-                ps.setString(5, a.item().toItemStack().hasItemMeta() && a.item().toItemStack().getItemMeta().hasDisplayName() ?
-                        a.item().toItemStack().getItemMeta().getDisplayName() : null);
+                ps.setString(5,
+                        a.item().toItemStack().hasItemMeta() && a.item().toItemStack().getItemMeta().hasDisplayName()
+                                ? a.item().toItemStack().getItemMeta().getDisplayName()
+                                : null);
                 ps.setDouble(6, a.price());
                 setNullableDouble(ps, 7, a.buyNowPrice());
                 setNullableDouble(ps, 8, a.reservePrice());
@@ -247,7 +287,7 @@ public class SQLiteAuctionStorage implements AuctionStorage {
     public CompletableFuture<Boolean> updateAuctionIfVersionMatches(Auction a, int expectedVersion) {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection conn = getConnection();
-                 PreparedStatement ps = conn.prepareStatement(UPDATE_AUCTION_VERSIONED)) {
+                    PreparedStatement ps = conn.prepareStatement(UPDATE_AUCTION_VERSIONED)) {
                 ps.setString(1, a.status().name());
                 ps.setInt(2, a.version());
                 ps.setString(3, a.id().toString());
@@ -266,7 +306,7 @@ public class SQLiteAuctionStorage implements AuctionStorage {
         return CompletableFuture.supplyAsync(() -> {
             List<Auction> auctions = new ArrayList<>();
             try (Connection conn = getConnection();
-                 PreparedStatement ps = conn.prepareStatement(FIND_EXPIRED)) {
+                    PreparedStatement ps = conn.prepareStatement(FIND_EXPIRED)) {
                 ps.setLong(1, nowEpochMillis);
                 ps.setInt(2, batchSize);
                 try (ResultSet rs = ps.executeQuery()) {
@@ -281,21 +321,18 @@ public class SQLiteAuctionStorage implements AuctionStorage {
         }, executor);
     }
 
-    
-
     private Auction mapRowToAuction(ResultSet rs) throws SQLException {
         return new Auction(
-            UUID.fromString(rs.getString("auction_id")),
-            UUID.fromString(rs.getString("seller_uuid")),
-            SerializedItem.fromBase64(rs.getString("item_base64")),
-            rs.getDouble("price"),
-            (Double) rs.getObject("buy_now_price"),
-            (Double) rs.getObject("reserve_price"),
-            rs.getLong("created_at"),
-            rs.getLong("end_at"),
-            AuctionStatus.valueOf(rs.getString("status")),
-            rs.getInt("version")
-        );
+                UUID.fromString(rs.getString("auction_id")),
+                UUID.fromString(rs.getString("seller_uuid")),
+                SerializedItem.fromBase64(rs.getString("item_base64")),
+                rs.getDouble("price"),
+                (Double) rs.getObject("buy_now_price"),
+                (Double) rs.getObject("reserve_price"),
+                rs.getLong("created_at"),
+                rs.getLong("end_at"),
+                AuctionStatus.valueOf(rs.getString("status")),
+                rs.getInt("version"));
     }
 
     private void setNullableDouble(PreparedStatement ps, int index, @Nullable Double value) throws SQLException {
@@ -316,20 +353,20 @@ public class SQLiteAuctionStorage implements AuctionStorage {
 
     // SQL Statements
     private static final String CREATE_AUCTIONS_TABLE = """
-        CREATE TABLE IF NOT EXISTS auctions (
-          auction_id       TEXT PRIMARY KEY,
-          seller_uuid      TEXT NOT NULL,
-          item_base64      TEXT NOT NULL,
-          item_type        TEXT NOT NULL,
-          item_name        TEXT NULL,
-          price            REAL NOT NULL,
-          buy_now_price    REAL NULL,
-          reserve_price    REAL NULL,
-          created_at       INTEGER NOT NULL,
-          end_at           INTEGER NOT NULL,
-          status           TEXT NOT NULL,
-          version          INTEGER NOT NULL
-        )""";
+            CREATE TABLE IF NOT EXISTS auctions (
+              auction_id       TEXT PRIMARY KEY,
+              seller_uuid      TEXT NOT NULL,
+              item_base64      TEXT NOT NULL,
+              item_type        TEXT NOT NULL,
+              item_name        TEXT NULL,
+              price            REAL NOT NULL,
+              buy_now_price    REAL NULL,
+              reserve_price    REAL NULL,
+              created_at       INTEGER NOT NULL,
+              end_at           INTEGER NOT NULL,
+              status           TEXT NOT NULL,
+              version          INTEGER NOT NULL
+            )""";
 
     private static final String CREATE_AUCTIONS_INDEX = "CREATE INDEX IF NOT EXISTS idx_auctions_active ON auctions (status, end_at);";
 
@@ -342,5 +379,3 @@ public class SQLiteAuctionStorage implements AuctionStorage {
     private static final String FIND_EXPIRED = "SELECT * FROM auctions WHERE status = 'ACTIVE' AND end_at <= ? LIMIT ?;";
     private static final String UPDATE_AUCTION_VERSIONED = "UPDATE auctions SET status = ?, version = ? WHERE auction_id = ? AND version = ?;";
 }
-
-

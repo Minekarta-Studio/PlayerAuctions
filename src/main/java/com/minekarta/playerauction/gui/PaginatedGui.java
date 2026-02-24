@@ -27,12 +27,18 @@ public abstract class PaginatedGui extends Gui {
 
     protected void addControlBar() {
         // Get border configuration
-        boolean borderEnabled = ((com.minekarta.playerauction.PlayerAuction) plugin).getConfigManager().getConfig().getBoolean("gui.border.enabled", true);
-        Material borderMaterial = Material.getMaterial(((com.minekarta.playerauction.PlayerAuction) plugin).getConfigManager().getConfig().getString("gui.border.material", "BLACK_STAINED_GLASS_PANE"));
-        String borderName = ((com.minekarta.playerauction.PlayerAuction) plugin).getConfigManager().getConfig().getString("gui.border.name", " ");
-        java.util.List<String> borderLore = ((com.minekarta.playerauction.PlayerAuction) plugin).getConfigManager().getConfig().getStringList("gui.border.lore");
+        boolean borderEnabled = ((com.minekarta.playerauction.PlayerAuction) plugin).getConfigManager().getConfig()
+                .getBoolean("gui.border.enabled", true);
+        Material borderMaterial = Material.getMaterial(((com.minekarta.playerauction.PlayerAuction) plugin)
+                .getConfigManager().getConfig().getString("gui.border.material", "BLACK_STAINED_GLASS_PANE"));
+        String borderName = ((com.minekarta.playerauction.PlayerAuction) plugin).getConfigManager().getConfig()
+                .getString("gui.border.name", " ");
+        java.util.List<String> borderLore = ((com.minekarta.playerauction.PlayerAuction) plugin).getConfigManager()
+                .getConfig().getStringList("gui.border.lore");
 
-        ItemStack borderFiller = new GuiItemBuilder(borderMaterial != null ? borderMaterial : Material.BLACK_STAINED_GLASS_PANE).setName(borderName).setLore(borderLore).build();
+        ItemStack borderFiller = new GuiItemBuilder(
+                borderMaterial != null ? borderMaterial : Material.BLACK_STAINED_GLASS_PANE).setName(borderName)
+                .setLore(borderLore).build();
         ItemStack accentFiller = new GuiItemBuilder(Material.LIGHT_GRAY_STAINED_GLASS_PANE).setName(" ").build();
 
         // Add border if enabled
@@ -69,15 +75,16 @@ public abstract class PaginatedGui extends Gui {
         // Previous Page Button (Slot 46) - Left side
         if (page > 1) {
             PlaceholderContext prevPageContext = new PlaceholderContext()
-                .addPlaceholder("current_page", page - 1);
-            String prevPageName = ((com.minekarta.playerauction.PlayerAuction) plugin).getConfigManager().getMessage("gui.control-items.previous-page", prevPageContext);
-            String prevPageLore = ((com.minekarta.playerauction.PlayerAuction) plugin).getConfigManager().getMessage("gui.control-items.previous-page-lore", prevPageContext)
-                .replace("[", "").replace("]", "").replace(",", "\n"); // Convert list format to newlines
+                    .addPlaceholder("current_page", String.valueOf(page - 1));
+            net.kyori.adventure.text.Component prevPageName = ((com.minekarta.playerauction.PlayerAuction) plugin)
+                    .getConfigManager().getMessage("gui.control-items.previous-page", prevPageContext);
+            net.kyori.adventure.text.Component prevPageLore = ((com.minekarta.playerauction.PlayerAuction) plugin)
+                    .getConfigManager().getMessage("gui.control-items.previous-page-lore", prevPageContext);
 
             inventory.setItem(46, new GuiItemBuilder(Material.ARROW)
-                .setName(prevPageName)
-                .setLore(prevPageLore.split("\n"))
-                .build());
+                    .setName(prevPageName)
+                    .addLore(prevPageLore)
+                    .build());
         }
 
         // NOTE: Sort button (Slot 47) is handled by MainAuctionGui.addCustomControls()
@@ -98,15 +105,16 @@ public abstract class PaginatedGui extends Gui {
         // Next Page Button (Slot 52) - Right side
         if (hasNextPage) {
             PlaceholderContext nextPageContext = new PlaceholderContext()
-                .addPlaceholder("current_page", page + 1);
-            String nextPageName = ((com.minekarta.playerauction.PlayerAuction) plugin).getConfigManager().getMessage("gui.control-items.next-page", nextPageContext);
-            String nextPageLore = ((com.minekarta.playerauction.PlayerAuction) plugin).getConfigManager().getMessage("gui.control-items.next-page-lore", nextPageContext)
-                .replace("[", "").replace("]", "").replace(",", "\n"); // Convert list format to newlines
+                    .addPlaceholder("current_page", String.valueOf(page + 1));
+            net.kyori.adventure.text.Component nextPageName = ((com.minekarta.playerauction.PlayerAuction) plugin)
+                    .getConfigManager().getMessage("gui.control-items.next-page", nextPageContext);
+            net.kyori.adventure.text.Component nextPageLore = ((com.minekarta.playerauction.PlayerAuction) plugin)
+                    .getConfigManager().getMessage("gui.control-items.next-page-lore", nextPageContext);
 
             inventory.setItem(52, new GuiItemBuilder(Material.ARROW)
-                .setName(nextPageName)
-                .setLore(nextPageLore.split("\n"))
-                .build());
+                    .setName(nextPageName)
+                    .addLore(nextPageLore)
+                    .build());
         }
     }
 
@@ -152,20 +160,20 @@ public abstract class PaginatedGui extends Gui {
             // Build complete player profile lore with modern hex colors
             java.util.List<String> lore = new java.util.ArrayList<>();
             lore.add("");
-            lore.add("&#2C3E50━━━━━━━━━━━━━━━━━━━━━");
-            lore.add("&#7F8C8D       ᴘʟᴀʏᴇʀ sᴛᴀᴛs");
-            lore.add("&#2C3E50━━━━━━━━━━━━━━━━━━━━━");
+            lore.add("<#2C3E50>━━━━━━━━━━━━━━━━━━━━━");
+            lore.add("<#7F8C8D>       ᴘʟᴀʏᴇʀ sᴛᴀᴛs");
+            lore.add("<#2C3E50>━━━━━━━━━━━━━━━━━━━━━");
             lore.add("");
-            lore.add("&#7F8C8DBalance    &#2ECC71" + formattedBalance);
-            lore.add("&#7F8C8DPage       &#ECF0F1" + page + "&#7F8C8D/&#ECF0F1" + totalPages);
+            lore.add("<#7F8C8D>Balance    <#2ECC71>" + formattedBalance);
+            lore.add("<#7F8C8D>Page       <#ECF0F1>" + page + "<#7F8C8D>/<#ECF0F1>" + totalPages);
             lore.add("");
-            lore.add("&#2C3E50━━━━━━━━━━━━━━━━━━━━━");
+            lore.add("<#2C3E50>━━━━━━━━━━━━━━━━━━━━━");
 
             ItemStack playerInfoItem = new GuiItemBuilder(org.bukkit.Material.PLAYER_HEAD)
-                .setSkullOwner(player.getName())
-                .setName("&#F5A623" + player.getName())
-                .setLore(lore)
-                .build();
+                    .setSkullOwner(player.getName())
+                    .setName("<#F5A623>" + player.getName())
+                    .setLore(lore)
+                    .build();
 
             // Update on main thread
             plugin.getServer().getScheduler().runTask(plugin, () -> {
@@ -174,4 +182,3 @@ public abstract class PaginatedGui extends Gui {
         });
     }
 }
-

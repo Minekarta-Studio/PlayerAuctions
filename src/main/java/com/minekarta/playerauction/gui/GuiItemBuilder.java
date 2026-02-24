@@ -10,7 +10,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Builder class untuk membuat ItemStack dengan support MiniMessage, Hex, RGB, dan Legacy colors.
+ * Builder class untuk membuat ItemStack dengan support MiniMessage, Hex, RGB,
+ * dan Legacy colors.
  */
 public class GuiItemBuilder {
     private final ItemStack itemStack;
@@ -28,69 +29,83 @@ public class GuiItemBuilder {
     }
 
     /**
+     * Set display name dengan Component (supports MiniMessage natively).
+     *
+     * @param component Display name component
+     * @return Builder instance
+     */
+    public GuiItemBuilder setName(Component component) {
+        if (itemMeta != null) {
+            itemMeta.displayName(component);
+        }
+        return this;
+    }
+
+    /**
      * Set display name dengan full format support (MiniMessage, Hex, RGB, Legacy).
+     * Parses the string to a Component.
      *
      * @param name Display name
      * @return Builder instance
      */
     public GuiItemBuilder setName(String name) {
         if (itemMeta != null) {
-            // Use MessageParser untuk comprehensive format support
-            String parsed = MessageParser.parseToLegacy(name);
-            itemMeta.setDisplayName(parsed);
+            itemMeta.displayName(MessageParser.parse(name));
         }
         return this;
     }
 
     /**
-     * Set lore dengan full format support.
+     * Set lore dengan full format support (Parses strings to Components).
      *
      * @param lore Lore lines
      * @return Builder instance
      */
     public GuiItemBuilder setLore(String... lore) {
         if (itemMeta != null) {
-            List<String> parsedLore = List.of(lore).stream()
-                    .map(MessageParser::parseToLegacy)
+            List<Component> parsedLore = List.of(lore).stream()
+                    .map(MessageParser::parse)
                     .collect(Collectors.toList());
-            itemMeta.setLore(parsedLore);
+            itemMeta.lore(parsedLore);
         }
         return this;
     }
 
     /**
-     * Set lore dari list dengan full format support.
+     * Set lore dari list dengan full format support (Parses strings to Components).
      *
      * @param lore Lore list
      * @return Builder instance
      */
     public GuiItemBuilder setLore(List<String> lore) {
         if (itemMeta != null) {
-            List<String> parsedLore = lore.stream()
-                    .map(MessageParser::parseToLegacy)
+            List<Component> parsedLore = lore.stream()
+                    .map(MessageParser::parse)
                     .collect(Collectors.toList());
-            itemMeta.setLore(parsedLore);
+            itemMeta.lore(parsedLore);
         }
         return this;
     }
 
     /**
      * Set lore using Components (supports MiniMessage gradients in item tooltips).
-     * This is the CORRECT way to use MiniMessage in GUI items - preserves gradients!
+     * This is the CORRECT way to use MiniMessage in GUI items - preserves
+     * gradients!
      *
      * @param lore Component list
      * @return Builder instance
      */
     public GuiItemBuilder setLoreComponents(List<Component> lore) {
         if (itemMeta != null) {
-            itemMeta.lore(lore);  // Paper's Component lore method - preserves MiniMessage!
+            itemMeta.lore(lore);
         }
         return this;
     }
 
     /**
      * Set lore using MiniMessage strings (auto-converts to Components).
-     * Use this when you have MiniMessage-formatted strings and want to preserve gradients.
+     * Use this when you have MiniMessage-formatted strings and want to preserve
+     * gradients.
      *
      * @param miniMessageLore MiniMessage formatted lore lines
      * @return Builder instance
@@ -98,9 +113,9 @@ public class GuiItemBuilder {
     public GuiItemBuilder setLoreMiniMessage(List<String> miniMessageLore) {
         if (itemMeta != null) {
             List<Component> components = miniMessageLore.stream()
-                    .map(MessageParser::parse)  // Parse to Component, preserves gradients
+                    .map(MessageParser::parse) // Parse to Component, preserves gradients
                     .collect(Collectors.toList());
-            itemMeta.lore(components);  // Set as Component lore
+            itemMeta.lore(components); // Set as Component lore
         }
         return this;
     }
@@ -117,20 +132,41 @@ public class GuiItemBuilder {
     }
 
     /**
-     * Add single line ke lore dengan full format support.
+     * Add single line ke lore dengan format support (Parses to Component).
      *
      * @param line Lore line to add
      * @return Builder instance
      */
     public GuiItemBuilder addLore(String line) {
         if (itemMeta != null) {
-            List<String> lore = itemMeta.getLore();
+            List<Component> lore = itemMeta.hasLore() ? itemMeta.lore() : new java.util.ArrayList<>();
             if (lore == null) {
                 lore = new java.util.ArrayList<>();
+            } else {
+                lore = new java.util.ArrayList<>(lore); // make mutable
             }
-            String parsed = MessageParser.parseToLegacy(line);
-            lore.add(parsed);
-            itemMeta.setLore(lore);
+            lore.add(MessageParser.parse(line));
+            itemMeta.lore(lore);
+        }
+        return this;
+    }
+
+    /**
+     * Add single line ke lore as a Component to preserve formats
+     *
+     * @param line Lore line to add
+     * @return Builder instance
+     */
+    public GuiItemBuilder addLore(Component line) {
+        if (itemMeta != null) {
+            List<Component> lore = itemMeta.hasLore() ? itemMeta.lore() : new java.util.ArrayList<>();
+            if (lore == null) {
+                lore = new java.util.ArrayList<>();
+            } else {
+                lore = new java.util.ArrayList<>(lore); // make mutable
+            }
+            lore.add(line);
+            itemMeta.lore(lore);
         }
         return this;
     }
@@ -161,4 +197,3 @@ public class GuiItemBuilder {
         return itemStack;
     }
 }
-

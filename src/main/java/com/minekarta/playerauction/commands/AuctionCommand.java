@@ -7,223 +7,223 @@ import com.minekarta.playerauction.gui.HistoryGui;
 import com.minekarta.playerauction.gui.MainAuctionGui;
 import com.minekarta.playerauction.gui.MyListingsGui;
 import com.minekarta.playerauction.gui.model.SortOrder;
+import com.minekarta.playerauction.players.PlayerSettingsService;
 import com.minekarta.playerauction.util.DurationParser;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
+
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
+import org.incendo.cloud.Command;
+import org.incendo.cloud.paper.LegacyPaperCommandManager;
+import org.incendo.cloud.parser.standard.DoubleParser;
+import org.incendo.cloud.parser.standard.StringParser;
+import org.incendo.cloud.bukkit.parser.OfflinePlayerParser;
 
-public class AuctionCommand implements CommandExecutor {
+public class AuctionCommand {
 
     private final PlayerAuction plugin;
+    private final LegacyPaperCommandManager<CommandSender> commandManager;
     private final AuctionService auctionService;
     private final ConfigManager configManager;
-    private final com.minekarta.playerauction.players.PlayerSettingsService playerSettingsService;
+    private final PlayerSettingsService playerSettingsService;
 
-    public AuctionCommand(PlayerAuction plugin, AuctionService auctionService, ConfigManager configManager, com.minekarta.playerauction.players.PlayerSettingsService playerSettingsService) {
+    public AuctionCommand(PlayerAuction plugin, LegacyPaperCommandManager<CommandSender> commandManager,
+            AuctionService auctionService, ConfigManager configManager,
+            PlayerSettingsService playerSettingsService) {
         this.plugin = plugin;
+        this.commandManager = commandManager;
         this.auctionService = auctionService;
         this.configManager = configManager;
         this.playerSettingsService = playerSettingsService;
+
+        registerCommands();
     }
 
-    @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage(configManager.getPrefixedMessage("errors.player-only"));
-            return true;
-        }
+    private void registerCommands() {
+        Command.Builder<CommandSender> base = commandManager.commandBuilder("ah", "auction", "auctionhouse");
 
-        if (args.length == 0) {
-            new MainAuctionGui(plugin, player, 1, SortOrder.NEWEST).open();
-            return true;
-        }
+        // Base command: /ah - opens MainAuctionGui
+        commandManager.command(base
+                .senderType(Player.class)
+                .handler(ctx -> {
+                    Player player = ctx.sender();
+                    new MainAuctionGui(plugin, player, 1, SortOrder.NEWEST).open();
+                }));
 
-        String subCommand = args[0].toLowerCase();
-        switch (subCommand) {
-            case "help" -> handleHelp(player);
-            case "sell" -> handleSell(player, args);
-            case "listings", "myauctions" -> {
-                if (!player.hasPermission("playerauctions.use")) {
-                    player.sendMessage(configManager.getPrefixedMessage("errors.no-permission"));
-                    return true;
-                }
-                new MyListingsGui(plugin, player, 1).open();
-            }
-            case "reload" -> handleReload(player);
-            case "search" -> handleSearch(player, args);
-            case "notify" -> handleNotify(player, args);
-            case "history" -> handleHistory(player, args);
-            default -> {
-                player.sendMessage(configManager.getPrefixedMessage("errors.unknown-command",
-                    "{command}", subCommand,
-                    "{usage}", "/" + label + " help"));
-                new MainAuctionGui(plugin, player, 1, SortOrder.NEWEST).open();
-            }
-        }
+        // /ah help
+        commandManager.command(base.literal("help")
+                .senderType(Player.class)
+                .permission("playerauctions.use")
+                .handler(ctx -> handleHelp(ctx.sender())));
 
-        return true;
+        // /ah listings
+        commandManager.command(base.literal("listings")
+                .senderType(Player.class)
+                .permission("playerauctions.use")
+                .handler(ctx -> {
+                    Player player = ctx.sender();
+                    new MyListingsGui(plugin, player, 1).open();
+                }));
+
+        // /ah myauctions
+        commandManager.command(base.literal("myauctions")
+                .senderType(Player.class)
+                .permission("playerauctions.use")
+                .handler(ctx -> {
+                    Player player = ctx.sender();
+                    new MyListingsGui(plugin, player, 1).open();
+                }));
+
+        // /ah reload
+        commandManager.command(base.literal("reload")
+                .permission("playerauctions.reload")
+                .handler(ctx -> {
+                    configManager.loadConfigs();
+                    ctx.sender().sendMessage(configManager.getPrefixedMessage("info.reload-success"));
+                }));
+
+        // /ah sell <price> [buyNow] [duration]
+        commandManager.command(base.literal("sell")
+                .senderType(Player.class)
+                .permission("playerauctions.sell")
+                .required("price", DoubleParser.doubleParser())
+                .optional("buyNow", DoubleParser.doubleParser())
+                .optional("duration", StringParser.stringParser())
+                .handler(ctx -> {
+                    Player player = ctx.sender();
+                    double price = ctx.get("price");
+                    Double buyNow = ctx.optional("buyNow").map(o -> (Double) o).orElse(null);
+                    String durationStr = ctx.optional("duration").map(o -> (String) o)
+                            .orElse(configManager.getConfig().getString("auction.defaults.duration", "24h"));
+                    handleSell(player, price, buyNow, durationStr);
+                }));
+
+        // /ah search <keyword>
+        commandManager.command(base.literal("search")
+                .senderType(Player.class)
+                .permission("playerauctions.search")
+                .required("keyword", StringParser.greedyStringParser())
+                .handler(ctx -> {
+                    Player player = ctx.sender();
+                    // Assuming you have logic in MainAuctionGui to handle search,
+                    // currently MainAuctionGui is opened for search the same way.
+                    new MainAuctionGui(plugin, player, 1, SortOrder.NEWEST).open();
+                }));
+
+        // /ah notify <on|off>
+        commandManager.command(base.literal("notify")
+                .senderType(Player.class)
+                .permission("playerauctions.notify")
+                .required("state", StringParser.stringParser())
+                .handler(ctx -> {
+                    Player player = ctx.sender();
+                    String state = ctx.get("state");
+                    if (!state.equalsIgnoreCase("on") && !state.equalsIgnoreCase("off")) {
+                        player.sendMessage(configManager.getPrefixedMessage("errors.usage-notify", "{usage}",
+                                "/ah notify <on|off>"));
+                        return;
+                    }
+                    boolean enabled = state.equalsIgnoreCase("on");
+                    playerSettingsService.setNotificationsEnabled(player, enabled);
+
+                    if (enabled) {
+                        player.sendMessage(configManager.getPrefixedMessage("info.notifications-on",
+                                "Auction notifications have been enabled."));
+                    } else {
+                        player.sendMessage(configManager.getPrefixedMessage("info.notifications-off",
+                                "Auction notifications have been disabled."));
+                    }
+                }));
+
+        // /ah history [player]
+        commandManager.command(base.literal("history")
+                .senderType(Player.class)
+                .permission("playerauctions.history")
+                .optional("target", OfflinePlayerParser.offlinePlayerParser())
+                .handler(ctx -> {
+                    Player player = ctx.sender();
+                    OfflinePlayer target = ctx.optional("target").map(o -> (OfflinePlayer) o).orElse(player);
+
+                    if (!target.getUniqueId().equals(player.getUniqueId())
+                            && !player.hasPermission("playerauctions.history.others")) {
+                        player.sendMessage(configManager.getPrefixedMessage("errors.no-permission"));
+                        return;
+                    }
+
+                    if (!target.hasPlayedBefore() && target.getName() != null) {
+                        player.sendMessage(configManager.getPrefixedMessage("errors.player-not-found", "{player}",
+                                target.getName()));
+                        return;
+                    }
+
+                    new HistoryGui(plugin, player, target.getUniqueId(), 1).open();
+                }));
     }
 
-    private void handleSell(Player player, String[] args) {
-        if (!player.hasPermission("playerauctions.sell")) {
-            player.sendMessage(configManager.getPrefixedMessage("errors.no-permission")); // Assumes no-permission message exists
-            return;
-        }
-
-        if (args.length < 2) {
-            player.sendMessage(configManager.getPrefixedMessage("errors.usage-sell", "{usage}", "/ah sell <price> [buyNow] [duration]"));
-            return;
-        }
-
+    private void handleSell(Player player, double price, Double buyNow, String durationStr) {
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
         if (itemInHand.getType().isAir()) {
             player.sendMessage(configManager.getPrefixedMessage("errors.no-item-in-hand"));
             return;
         }
 
-        double price;
-        try {
-            price = Double.parseDouble(args[1]);
-        } catch (NumberFormatException e) {
-            player.sendMessage(configManager.getPrefixedMessage("errors.not-a-number"));
+        if (price < configManager.getConfig().getDouble("auction.min-price", 1.0)) {
+            player.sendMessage(configManager.getPrefixedMessage("errors.price-too-low", "{min}",
+                    String.valueOf(configManager.getConfig().getDouble("auction.min-price", 1.0))));
             return;
         }
 
-        if (price < configManager.getConfig().getDouble("auction.min-price", 1.0)) {
-             player.sendMessage(configManager.getPrefixedMessage("errors.price-too-low", "{min}", String.valueOf(configManager.getConfig().getDouble("auction.min-price", 1.0))));
-             return;
-        }
-
-        Double buyNow = args.length > 2 ? Double.parseDouble(args[2]) : null;
-        String durationStr = args.length > 3 ? args[3] : configManager.getConfig().getString("auction.defaults.duration", "24h");
-
         long durationMillis = DurationParser.parse(durationStr).orElse(0L);
         if (durationMillis <= 0) {
-            player.sendMessage(configManager.getPrefixedMessage("errors.duration-out-of-range", "{min}", "1s", "{max}", "infinite")); // Placeholder
+            player.sendMessage(configManager.getPrefixedMessage("errors.duration-out-of-range", "{min}", "1s", "{max}",
+                    "infinite"));
             return;
         }
 
         int maxAuctions = configManager.getConfig().getInt("auction.max-auctions-per-player", 5);
         auctionService.getPlayerActiveAuctionCount(player.getUniqueId()).thenAccept(count -> {
             if (count >= maxAuctions) {
-                player.sendMessage(configManager.getPrefixedMessage("errors.listing-limit-reached", "{limit}", String.valueOf(maxAuctions)));
+                player.sendMessage(configManager.getPrefixedMessage("errors.listing-limit-reached", "{limit}",
+                        String.valueOf(maxAuctions)));
                 return;
             }
 
             ItemStack toSell = itemInHand.clone();
-            player.getInventory().setItemInMainHand(null); // Remove item from hand
+            player.getInventory().setItemInMainHand(null);
 
             auctionService.createListing(player, toSell, price, buyNow, null, durationMillis).thenAccept(success -> {
                 if (success) {
-                    // Format duration and price for display
                     String formattedDuration = com.minekarta.playerauction.util.TimeUtil.formatDuration(durationMillis);
                     String formattedPrice = plugin.getEconomyRouter().getService().format(price);
 
-                    // Send success message to player
                     player.sendMessage(configManager.getPrefixedMessage("info.listed",
-                        "{item}", toSell.getType().toString(),
-                        "{price}", formattedPrice,
-                        "{duration}", formattedDuration));
+                            "{item}", toSell.getType().toString(),
+                            "{price}", formattedPrice,
+                            "{duration}", formattedDuration));
 
-                    // Broadcast listing to all players
                     plugin.getBroadcastManager().broadcastListing(
-                        player.getName(),
-                        toSell.getType().toString(),
-                        toSell.getAmount(),
-                        formattedPrice,
-                        player.getWorld()
-                    );
+                            player.getName(),
+                            toSell.getType().toString(),
+                            toSell.getAmount(),
+                            formattedPrice,
+                            player.getWorld());
                 } else {
                     player.sendMessage(configManager.getPrefixedMessage("errors.generic-error"));
-                    player.getInventory().addItem(toSell); // Return item on failure
+                    player.getInventory().addItem(toSell);
                 }
             });
         });
     }
 
-    private void handleReload(Player player) {
-        if (!player.hasPermission("playerauctions.reload")) {
-            player.sendMessage(configManager.getPrefixedMessage("errors.no-permission"));
-            return;
-        }
-        configManager.loadConfigs();
-        player.sendMessage(configManager.getPrefixedMessage("info.reload-success"));
-    }
-
-    private void handleSearch(Player player, String[] args) {
-        if (!player.hasPermission("playerauctions.search")) {
-            player.sendMessage(configManager.getPrefixedMessage("errors.no-permission"));
-            return;
-        }
-
-        if (args.length < 2) {
-            player.sendMessage(configManager.getPrefixedMessage("errors.usage-search", "{usage}", "/ah search <keyword>"));
-            return;
-        }
-
-        String searchQuery = String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length));
-        new MainAuctionGui(plugin, player, 1, SortOrder.NEWEST).open();
-    }
-
-    private void handleNotify(Player player, String[] args) {
-        if (!player.hasPermission("playerauctions.notify")) {
-            player.sendMessage(configManager.getPrefixedMessage("errors.no-permission"));
-            return;
-        }
-
-        if (args.length < 2 || (!args[1].equalsIgnoreCase("on") && !args[1].equalsIgnoreCase("off"))) {
-            player.sendMessage(configManager.getPrefixedMessage("errors.usage-notify", "{usage}", "/ah notify <on/off>"));
-            return;
-        }
-
-        boolean enabled = args[1].equalsIgnoreCase("on");
-        playerSettingsService.setNotificationsEnabled(player, enabled);
-
-        if (enabled) {
-            player.sendMessage(configManager.getPrefixedMessage("info.notifications-on", "Auction notifications have been enabled."));
-        } else {
-            player.sendMessage(configManager.getPrefixedMessage("info.notifications-off", "Auction notifications have been disabled."));
-        }
-    }
-
-    private void handleHistory(Player player, String[] args) {
-        if (!player.hasPermission("playerauctions.history")) {
-            player.sendMessage(configManager.getPrefixedMessage("errors.no-permission"));
-            return;
-        }
-
-        if (args.length > 1) {
-            if (!player.hasPermission("playerauctions.history.others")) {
-                player.sendMessage(configManager.getPrefixedMessage("errors.no-permission"));
-                return;
-            }
-            org.bukkit.OfflinePlayer targetPlayer = org.bukkit.Bukkit.getOfflinePlayer(args[1]);
-            if (!targetPlayer.hasPlayedBefore() && targetPlayer.getUniqueId() == null) {
-                player.sendMessage(configManager.getPrefixedMessage("errors.player-not-found", "{player}", args[1]));
-                return;
-            }
-            new HistoryGui(plugin, player, targetPlayer.getUniqueId(), 1).open();
-        } else {
-            new HistoryGui(plugin, player, player.getUniqueId(), 1).open();
-        }
-    }
-
     private void handleHelp(Player player) {
-        if (!player.hasPermission("playerauctions.use")) {
-            player.sendMessage(configManager.getPrefixedMessage("errors.no-permission"));
-            return;
-        }
-
         player.sendMessage("§6§lPlayerAuctions Help");
         player.sendMessage("§7─────────────────────────");
         player.sendMessage("§e/ah §7- Opens the auction house GUI");
 
         if (player.hasPermission("playerauctions.sell")) {
             player.sendMessage("§e/ah sell <price> [buy_now] [duration] §7- Sell item in hand");
-            player.sendMessage("§7  §8Price: Starting bid amount");
+            player.sendMessage("§7  §8Price: Listing price");
             player.sendMessage("§7  §8Buy Now: Instant purchase price (optional)");
             player.sendMessage("§7  §8Duration: 1h, 6h, 12h, 24h, 48h, 72h (default: 24h)");
         }
@@ -233,8 +233,7 @@ public class AuctionCommand implements CommandExecutor {
         }
 
         if (player.hasPermission("playerauctions.use")) {
-            player.sendMessage("§e/ah listings §7- View your auction listings");
-            player.sendMessage("§e/ah myauctions §7- View your auction listings");
+            player.sendMessage("§e/ah listings | myauctions §7- View your auction listings");
         }
 
         if (player.hasPermission("playerauctions.notify")) {
@@ -253,4 +252,3 @@ public class AuctionCommand implements CommandExecutor {
         player.sendMessage("§6Aliases: §f/ah, /auction, /auctionhouse");
     }
 }
-

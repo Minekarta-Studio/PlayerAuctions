@@ -21,7 +21,6 @@ public class MainAuctionGui extends PaginatedGui {
     private final PlayerAuction kah;
     private List<Auction> auctions;
     private final SortOrder sortOrder;
-    
 
     // ✅ FIX: Available slots for auction items (avoiding borders and controls)
     // GUI Layout (54 slots = 6 rows × 9 columns):
@@ -33,10 +32,10 @@ public class MainAuctionGui extends PaginatedGui {
     // Row 5 (slots 45-53): Bottom border + controls
     // Total: 28 slots available for auction items (7 per row × 4 rows)
     private static final int[] AUCTION_SLOTS = {
-        10, 11, 12, 13, 14, 15, 16, // Row 1
-        19, 20, 21, 22, 23, 24, 25, // Row 2
-        28, 29, 30, 31, 32, 33, 34, // Row 3
-        37, 38, 39, 40, 41, 42, 43  // Row 4
+            10, 11, 12, 13, 14, 15, 16, // Row 1
+            19, 20, 21, 22, 23, 24, 25, // Row 2
+            28, 29, 30, 31, 32, 33, 34, // Row 3
+            37, 38, 39, 40, 41, 42, 43 // Row 4
     };
 
     private static final int ITEMS_PER_PAGE = AUCTION_SLOTS.length; // 28 items per page
@@ -45,7 +44,7 @@ public class MainAuctionGui extends PaginatedGui {
         super(plugin, player, page, ITEMS_PER_PAGE);
         this.kah = plugin;
         this.sortOrder = sortOrder;
-        
+
         // Mark as async GUI - we'll call openInventory() after build completes
         setAsync(true);
     }
@@ -78,15 +77,23 @@ public class MainAuctionGui extends PaginatedGui {
         return -1;
     }
 
+    protected net.kyori.adventure.text.Component getTitleComponent() {
+        return kah.getConfigManager().getMessage("gui.main-title",
+                "%page%", String.valueOf(page),
+                "%max_page%", String.valueOf(page + (hasNextPage ? 1 : 0))); // Simple estimation if needed or remove
+                                                                             // max_page
+    }
+
     @Override
     protected String getTitle() {
-        return kah.getConfigManager().getMessage("gui.main-title");
+        return com.minekarta.playerauction.util.MessageParser.toPlainText(getTitleComponent());
     }
 
     @Override
     protected void build() {
         // Get auctions for the current page and player balance
-        CompletableFuture<List<Auction>> pageAuctionsFuture = kah.getAuctionService().getActiveAuctions(page, itemsPerPage, AuctionCategory.ALL, sortOrder);
+        CompletableFuture<List<Auction>> pageAuctionsFuture = kah.getAuctionService().getActiveAuctions(page,
+                itemsPerPage, AuctionCategory.ALL, sortOrder);
         CompletableFuture<Double> balanceFuture = kah.getEconomyRouter().getService().getBalance(player.getUniqueId());
 
         // Use total count for pagination (no filtering)
@@ -110,8 +117,9 @@ public class MainAuctionGui extends PaginatedGui {
             return balance;
         }).thenCombine(totalCountFuture, (balance, totalCount) -> {
             int totalPages = (int) Math.ceil((double) totalCount / itemsPerPage);
-            if (totalPages == 0) totalPages = 1;
-            return new Object[]{totalPages, balance};
+            if (totalPages == 0)
+                totalPages = 1;
+            return new Object[] { totalPages, balance };
         }).thenAccept(data -> {
             int totalPages = (Integer) data[0];
 
@@ -153,50 +161,58 @@ public class MainAuctionGui extends PaginatedGui {
         // [50] MyListings | [51] Mailbox | [52] Next | [53] Border
         // ═══════════════════════════════════════════════════════════════════════
 
-        // Sort Button (Slot 47)
-        PlaceholderContext sortContext = new PlaceholderContext()
-            .addPlaceholder("sort_order", sortOrder.getDisplayName());
-        String sortName = kah.getConfigManager().getMessage("gui.control-items.sort", sortContext);
+        // Add custom controls
+        // Sort button
+        com.minekarta.playerauction.util.PlaceholderContext sortContext = new com.minekarta.playerauction.util.PlaceholderContext()
+                .addPlaceholder("sort_type", sortOrder.getDisplayName());
+        net.kyori.adventure.text.Component sortName = kah.getConfigManager().getMessage("gui.control-items.sort",
+                sortContext);
         List<String> sortLore = new ArrayList<>();
         sortLore.add("");
-        sortLore.add("&#BDC3C7Current: &#ECF0F1" + sortOrder.getDisplayName());
+        sortLore.add("<#BDC3C7>Current: <#ECF0F1>" + sortOrder.getDisplayName());
         sortLore.add("");
-        for (com.minekarta.playerauction.gui.model.SortOrder order : com.minekarta.playerauction.gui.model.SortOrder.values()) {
+        for (com.minekarta.playerauction.gui.model.SortOrder order : com.minekarta.playerauction.gui.model.SortOrder
+                .values()) {
             if (order == sortOrder) {
-                sortLore.add("&#2ECC71► " + order.getDisplayName());
+                sortLore.add("<#2ECC71>► " + order.getDisplayName());
             } else {
-                sortLore.add("&#7F8C8D  " + order.getDisplayName());
+                sortLore.add("<#7F8C8D>  " + order.getDisplayName());
             }
         }
         sortLore.add("");
-        sortLore.add("&#F5A623Click to change");
+        sortLore.add("<#F5A623>Click to change");
         inventory.setItem(47, new GuiItemBuilder(Material.COMPARATOR).setName(sortName).setLore(sortLore).build());
 
-
-        // My Listings Button (Slot 50)
-        String myListingsName = kah.getConfigManager().getMessage("gui.control-items.my-listings", null);
-        kah.getAuctionService().getPlayerActiveAuctionCount(player.getUniqueId()).thenAccept(count -> {
-            int maxListings = kah.getConfigManager().getConfig().getInt("auction.max-auctions-per-player", 5);
-            List<String> myListingsLore = new ArrayList<>();
-            myListingsLore.add("");
-            myListingsLore.add("&#BDC3C7View your active auctions");
-            myListingsLore.add("");
-            myListingsLore.add("&#7F8C8DActive: &#ECF0F1" + count + "&#7F8C8D/&#ECF0F1" + maxListings);
-            myListingsLore.add("");
-            myListingsLore.add("&#E67E22Click to view");
-            plugin.getServer().getScheduler().runTask(plugin, () -> {
-                inventory.setItem(50, new GuiItemBuilder(Material.BOOK).setName(myListingsName).setLore(myListingsLore).build());
+        // My listings button
+        if (player.hasPermission("playerauctions.sell")) {
+            net.kyori.adventure.text.Component myListingsName = kah.getConfigManager()
+                    .getMessage("gui.control-items.my-listings", null);
+            kah.getAuctionService().getPlayerActiveAuctionCount(player.getUniqueId()).thenAccept(count -> {
+                int maxListings = kah.getConfigManager().getConfig().getInt("auction.max-auctions-per-player", 5);
+                List<String> myListingsLore = new ArrayList<>();
+                myListingsLore.add("");
+                myListingsLore.add("<#BDC3C7>View your active auctions");
+                myListingsLore.add("");
+                myListingsLore.add("<#7F8C8D>Active: <#ECF0F1>" + count + "<#7F8C8D>/<#ECF0F1>" + maxListings);
+                myListingsLore.add("");
+                myListingsLore.add("<#E67E22>Click to view");
+                plugin.getServer().getScheduler().runTask(plugin, () -> {
+                    inventory.setItem(50,
+                            new GuiItemBuilder(Material.BOOK).setName(myListingsName).setLore(myListingsLore).build());
+                });
             });
-        });
+        }
 
-        // Mailbox Button (Slot 51)
-        String mailboxName = kah.getConfigManager().getMessage("gui.control-items.mailbox", null);
+        // Mailbox button
+        net.kyori.adventure.text.Component mailboxName = kah.getConfigManager().getMessage("gui.control-items.mailbox",
+                null);
         List<String> mailboxLore = new ArrayList<>();
         mailboxLore.add("");
-        mailboxLore.add("&#BDC3C7Check pending items & money");
+        mailboxLore.add("<#BDC3C7>Check pending items & money");
         mailboxLore.add("");
-        mailboxLore.add("&#2ECC71Click to open");
-        inventory.setItem(51, new GuiItemBuilder(Material.ENDER_CHEST).setName(mailboxName).setLore(mailboxLore).build());
+        mailboxLore.add("<#2ECC71>Click to open");
+        inventory.setItem(51,
+                new GuiItemBuilder(Material.ENDER_CHEST).setName(mailboxName).setLore(mailboxLore).build());
     }
 
     private ItemStack createAuctionItem(Auction auction, double playerBalance) {
@@ -204,9 +220,21 @@ public class MainAuctionGui extends PaginatedGui {
         GuiItemBuilder builder = new GuiItemBuilder(item);
 
         // Get clean item display name
-        String itemDisplayName = item.hasItemMeta() && item.getItemMeta().hasDisplayName()
-            ? item.getItemMeta().getDisplayName()
-            : formatItemName(item.getType().toString());
+        net.kyori.adventure.text.Component itemDisplayNameComp = item.hasItemMeta()
+                && item.getItemMeta().hasDisplayName()
+                        ? item.getItemMeta().displayName()
+                        : net.kyori.adventure.text.Component.text(formatItemName(item.getType().toString()));
+
+        // Serialize component back to minimessage for placeholders so it persists
+        // formats
+        String itemDisplayNameStr = net.kyori.adventure.text.minimessage.MiniMessage.miniMessage()
+                .serialize(itemDisplayNameComp);
+
+        if (item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
+            builder.setName(itemDisplayNameComp);
+        } else {
+            builder.setName(itemDisplayNameStr);
+        }
 
         // Get seller name
         String sellerName = kah.getPlayerNameCache().getName(auction.seller()).join();
@@ -219,9 +247,9 @@ public class MainAuctionGui extends PaginatedGui {
 
         // Create placeholder context for auction-specific information
         PlaceholderContext context = new PlaceholderContext()
-            .addPlaceholder("seller", sellerName)
-            .addPlaceholder("item_name", itemDisplayName)
-            .addPlaceholder("quantity", String.valueOf(item.getAmount()));
+                .addPlaceholder("seller", sellerName)
+                .addPlaceholder("item_name", itemDisplayNameStr)
+                .addPlaceholder("quantity", String.valueOf(item.getAmount()));
 
         // ═══════════════════════════════════════════════
         // PRICING INFORMATION
@@ -230,26 +258,28 @@ public class MainAuctionGui extends PaginatedGui {
         // Starting price (initial bid)
         context.addPlaceholder("starting_price", economyService.format(auction.price()));
 
-        // Current bid (for now same as starting price, can be enhanced with bid tracking)
-        // TODO: When bid system is fully implemented, this should show actual current highest bid
+        // Current bid (for now same as starting price, can be enhanced with bid
+        // tracking)
+        // TODO: When bid system is fully implemented, this should show actual current
+        // highest bid
         context.addPlaceholder("current_bid", economyService.format(auction.price()));
 
         // Buy Now price with visual indicator
         if (auction.buyNowPrice() != null) {
             context.addPlaceholder("buy_now_price", economyService.format(auction.buyNowPrice()));
-            context.addPlaceholder("buy_now_display", "&#2ECC71" + economyService.format(auction.buyNowPrice()));
+            context.addPlaceholder("buy_now_display", "<#2ECC71>" + economyService.format(auction.buyNowPrice()));
         } else {
             context.addPlaceholder("buy_now_price", "N/A");
-            context.addPlaceholder("buy_now_display", "&#7F8C8D—");
+            context.addPlaceholder("buy_now_display", "<#7F8C8D>—");
         }
 
         // Reserve price with visual indicator
         if (auction.reservePrice() != null) {
             context.addPlaceholder("reserve_price", economyService.format(auction.reservePrice()));
-            context.addPlaceholder("reserve_display", "&#E67E22" + economyService.format(auction.reservePrice()));
+            context.addPlaceholder("reserve_display", "<#E67E22>" + economyService.format(auction.reservePrice()));
         } else {
             context.addPlaceholder("reserve_price", "N/A");
-            context.addPlaceholder("reserve_display", "&#7F8C8D—");
+            context.addPlaceholder("reserve_display", "<#7F8C8D>—");
         }
 
         // ═══════════════════════════════════════════════
@@ -269,13 +299,13 @@ public class MainAuctionGui extends PaginatedGui {
         String timeStr = TimeUtil.formatDuration(timeLeft);
         String timeColor;
         if (timeLeft <= 0) {
-            timeColor = "&#E74C3C"; // Coral Red - expired
+            timeColor = "<#E74C3C>"; // Coral Red - expired
         } else if (timeLeft < 60 * 60 * 1000) { // Less than 1 hour
-            timeColor = "&#E74C3C"; // Coral Red - urgent
+            timeColor = "<#E74C3C>"; // Coral Red - urgent
         } else if (timeLeft < 24 * 60 * 60 * 1000) { // Less than 24 hours
-            timeColor = "&#E67E22"; // Carrot - warning
+            timeColor = "<#E67E22>"; // Carrot - warning
         } else {
-            timeColor = "&#2ECC71"; // Emerald - plenty of time
+            timeColor = "<#2ECC71>"; // Emerald - plenty of time
         }
         context.addPlaceholder("time_left", timeStr);
         context.addPlaceholder("time_color", timeColor);
@@ -304,51 +334,52 @@ public class MainAuctionGui extends PaginatedGui {
         context.addPlaceholder("price", economyService.format(effectivePrice));
 
         boolean canAfford = playerBalance >= effectivePrice;
-        context.addPlaceholder("affordable_text", canAfford ?
-            "You can afford this item" : "Need more money to purchase");
+        context.addPlaceholder("affordable_text",
+                canAfford ? "You can afford this item" : "Need more money to purchase");
 
         double neededAmount = effectivePrice - playerBalance;
-        context.addPlaceholder("needed_amount", neededAmount > 0 ?
-            economyService.format(neededAmount) : economyService.format(0));
+        context.addPlaceholder("needed_amount",
+                neededAmount > 0 ? economyService.format(neededAmount) : economyService.format(0));
 
         // ═══════════════════════════════════════════════
         // BUILD LORE
         // ═══════════════════════════════════════════════
 
-        List<String> lore = new ArrayList<>();
+        List<net.kyori.adventure.text.Component> lore = new ArrayList<>();
 
         // Get lore template from messages.yml
         List<String> rawLore = kah.getConfigManager().getMessages().getStringList("gui.item-lore");
         for (String loreLine : rawLore) {
-            // Process message with placeholders and hex color support
-            String processed = kah.getConfigManager().processMessage(loreLine, context);
+            net.kyori.adventure.text.Component processed = kah.getConfigManager().processMessageAsComponent(loreLine,
+                    context);
             lore.add(processed);
         }
 
         // Add action buttons based on context
-        lore.add("");
+        lore.add(net.kyori.adventure.text.Component.empty());
 
         if (isOwnAuction) {
             // Player's own auction - show manage option
-            String actionMsg = kah.getConfigManager().getMessage("gui.item-action.own-auction", context);
-            for (String line : actionMsg.split("\n")) {
-                lore.add(line);
+            String rawActionMsg = kah.getConfigManager().getMessages().getString("gui.item-action.own-auction", "");
+            for (String line : rawActionMsg.split("\n")) {
+                lore.add(kah.getConfigManager().processMessageAsComponent(line, context));
             }
         } else if (canAfford) {
             // Can afford - show purchase options
-            String actionMsg = kah.getConfigManager().getMessage("gui.item-action.can-purchase", context);
-            for (String line : actionMsg.split("\n")) {
-                lore.add(line);
+            String rawActionMsg = kah.getConfigManager().getMessages().getString("gui.item-action.can-purchase", "");
+            for (String line : rawActionMsg.split("\n")) {
+                lore.add(kah.getConfigManager().processMessageAsComponent(line, context));
             }
         } else {
             // Cannot afford - show insufficient funds
-            String actionMsg = kah.getConfigManager().getMessage("gui.item-action.insufficient-funds", context);
-            for (String line : actionMsg.split("\n")) {
-                lore.add(line);
+            String rawActionMsg = kah.getConfigManager().getMessages().getString("gui.item-action.insufficient-funds",
+                    "");
+            for (String line : rawActionMsg.split("\n")) {
+                lore.add(kah.getConfigManager().processMessageAsComponent(line, context));
             }
         }
 
-        return builder.setLore(lore).build();
+        return builder.setLoreComponents(lore).build();
     }
 
     /**
@@ -396,25 +427,26 @@ public class MainAuctionGui extends PaginatedGui {
     }
 
     private String getStatusColor(com.minekarta.playerauction.auction.model.AuctionStatus status) {
-        // Modern hex colors (not legacy Minecraft colors)
+        // Modern hex colors
         switch (status) {
             case ACTIVE:
-                return "&#2ECC71"; // Emerald for active
+                return "<#2ECC71>"; // Emerald for active
             case FINISHED:
-                return "&#F5A623"; // Amber Gold for sold
+                return "<#F5A623>"; // Amber Gold for sold
             case CANCELLED:
-                return "&#7F8C8D"; // Slate Gray for cancelled
+                return "<#7F8C8D>"; // Slate Gray for cancelled
             case EXPIRED:
-                return "&#E74C3C"; // Coral Red for expired
+                return "<#E74C3C>"; // Coral Red for expired
             default:
-                return "&#ECF0F1"; // Cloud White for unknown
+                return "<#ECF0F1>"; // Cloud White for unknown
         }
     }
 
     @Override
     protected void onClick(InventoryClickEvent event) {
         // Handle pagination, close, and player info clicks from the parent
-        if (handleControlBarClick(event)) return;
+        if (handleControlBarClick(event))
+            return;
 
         int slot = event.getSlot();
 
@@ -430,8 +462,8 @@ public class MainAuctionGui extends PaginatedGui {
                     kah.getAuctionService().buyItem(player, clickedAuction.id()).thenAccept(success -> {
                         if (success) {
                             player.sendMessage(kah.getConfigManager().getPrefixedMessage("auction.purchase-success",
-                                "%item%", clickedAuction.item().toItemStack().getType().toString(),
-                                "%price%", kah.getEconomyRouter().getService().format(clickedAuction.price())));
+                                    "%item%", clickedAuction.item().toItemStack().getType().toString(),
+                                    "%price%", kah.getEconomyRouter().getService().format(clickedAuction.price())));
                         } else {
                             // Purchase failed - item likely already sold or other error occurred
                             player.sendMessage(kah.getConfigManager().getPrefixedMessage("errors.buy-fail"));
@@ -442,8 +474,8 @@ public class MainAuctionGui extends PaginatedGui {
                 } else {
                     // Insufficient funds
                     player.sendMessage(kah.getConfigManager().getPrefixedMessage("errors.insufficient-funds",
-                        "%needed%", kah.getEconomyRouter().getService().format(price - balance),
-                        "%balance%", kah.getEconomyRouter().getService().format(balance)));
+                            "%needed%", kah.getEconomyRouter().getService().format(price - balance),
+                            "%balance%", kah.getEconomyRouter().getService().format(balance)));
                 }
             });
             return;
@@ -472,8 +504,3 @@ public class MainAuctionGui extends PaginatedGui {
         return sortOrder.getDisplayName();
     }
 }
-
-
-
-
-

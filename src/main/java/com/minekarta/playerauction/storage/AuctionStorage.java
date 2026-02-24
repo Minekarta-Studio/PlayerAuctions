@@ -28,7 +28,8 @@ public interface AuctionStorage {
     /**
      * Finds a list of active auctions with pagination support.
      */
-    CompletableFuture<List<Auction>> findActiveAuctions(int page, int limit, AuctionCategory category, SortOrder sortOrder);
+    CompletableFuture<List<Auction>> findActiveAuctions(int page, int limit, AuctionCategory category,
+            SortOrder sortOrder);
 
     /**
      * Finds auctions listed by a specific seller.
@@ -46,7 +47,8 @@ public interface AuctionStorage {
     CompletableFuture<Integer> countActiveBySeller(UUID sellerId);
 
     /**
-     * Counts the number of active auctions for a specific seller (alternative method name).
+     * Counts the number of active auctions for a specific seller (alternative
+     * method name).
      */
     CompletableFuture<Integer> countActiveAuctionsByPlayer(UUID playerId);
 
@@ -56,6 +58,11 @@ public interface AuctionStorage {
     CompletableFuture<Integer> countAllActiveAuctions();
 
     /**
+     * Counts the number of active auctions matching the category and search query.
+     */
+    CompletableFuture<Integer> countActiveAuctions(AuctionCategory category, SortOrder sortOrder, String searchQuery);
+
+    /**
      * Inserts a new auction into the storage.
      */
     CompletableFuture<Void> insertAuction(Auction a);
@@ -63,7 +70,9 @@ public interface AuctionStorage {
     /**
      * Updates an auction only if the provided version matches the one in storage.
      * This is for optimistic concurrency control.
-     * @return A future completing with true if the update was successful, false otherwise.
+     * 
+     * @return A future completing with true if the update was successful, false
+     *         otherwise.
      */
     CompletableFuture<Boolean> updateAuctionIfVersionMatches(Auction a, int expectedVersion);
 
@@ -72,4 +81,3 @@ public interface AuctionStorage {
      */
     CompletableFuture<List<Auction>> findExpiredUpTo(long nowEpochMillis, int batchSize);
 }
-

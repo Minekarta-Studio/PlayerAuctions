@@ -1,24 +1,12 @@
 name: PlayerAuctions
-version: 2.5.4
+version: 3.0.0
 main: com.minekarta.playerauction.PlayerAuction
 author: MinekartaStudio
 api-version: '1.21'
 depend: [Vault]
 softdepend: [PlaceholderAPI, KartaEmeraldCurrency]
 
-commands:
-  ah:
-    description: Main command for PlayerAuctions - open auction house or manage listings.
-    usage: /ah [subcommand] [arguments]
-    aliases: [auction, auctionhouse]
-  auction:
-    description: Alternative main command for PlayerAuctions - open auction house or manage listings.
-    usage: /auction [subcommand] [arguments]
-    aliases: [ah, auctionhouse]
-  auctionhouse:
-    description: Alternative main command for PlayerAuctions - open auction house or manage listings.
-    usage: /auctionhouse [subcommand] [arguments]
-    aliases: [ah, auction]
+
 
 permissions:
   playerauctions.use:
@@ -28,7 +16,7 @@ permissions:
     description: Allows listing items for sale using /ah sell.
     default: true
   playerauctions.cancel:
-    description: Allows cancelling your own auctions (if they have no bids).
+    description: Allows cancelling your own auctions.
     default: true
   playerauctions.reload:
     description: Allows reloading the plugin's configuration files.

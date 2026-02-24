@@ -43,12 +43,12 @@ public class ConfigManager {
         return messages;
     }
 
-    public String getMessage(String path, String... replacements) {
+    public Component getMessage(String path, String... replacements) {
         String message = messages.getString(path, "&cMissing message: " + path);
 
         // Handle null or empty replacements array to prevent NullPointerException
         if (replacements == null || replacements.length == 0) {
-            return MessageParser.parseToLegacy(message);
+            return MessageParser.parse(message);
         }
 
         // Apply manual replacements first (BEFORE parsing to avoid format conflicts)
@@ -72,19 +72,21 @@ public class ConfigManager {
             }
         }
 
-        // Use MessageParser for comprehensive format support (MiniMessage, Hex, RGB, Legacy)
-        return MessageParser.parseToLegacy(message);
+        // Use MessageParser for comprehensive format support (MiniMessage, Hex, RGB,
+        // Legacy)
+        return MessageParser.parse(message);
     }
 
     /**
      * Gets a message with both manual replacements and dynamic placeholder context.
      *
-     * @param path The message path in messages.yml
-     * @param context The placeholder context containing dynamic replacements
-     * @param replacements Manual replacements in the format {placeholder, value, placeholder, value, ...}
+     * @param path         The message path in messages.yml
+     * @param context      The placeholder context containing dynamic replacements
+     * @param replacements Manual replacements in the format {placeholder, value,
+     *                     placeholder, value, ...}
      * @return The processed message with all placeholders replaced
      */
-    public String getMessage(String path, PlaceholderContext context, String... replacements) {
+    public Component getMessage(String path, PlaceholderContext context, String... replacements) {
         String message = messages.getString(path, "&cMissing message: " + path);
 
         // Apply manual replacements first
@@ -114,23 +116,24 @@ public class ConfigManager {
         }
 
         // Use MessageParser for comprehensive format support
-        return MessageParser.parseToLegacy(message);
+        return MessageParser.parse(message);
     }
 
     /**
      * Process a raw message string (not a path) with placeholder context.
      * This is used when the message content is already retrieved from config.
      *
-     * Use this when you have the actual message content from a list or direct string,
+     * Use this when you have the actual message content from a list or direct
+     * string,
      * not when you have a path like "gui.item-lore".
      *
      * @param messageContent The actual message content (not a path)
-     * @param context The placeholder context containing dynamic replacements
+     * @param context        The placeholder context containing dynamic replacements
      * @return The processed message with all placeholders replaced
      */
-    public String processMessage(String messageContent, PlaceholderContext context) {
+    public Component processMessage(String messageContent, PlaceholderContext context) {
         if (messageContent == null || messageContent.isEmpty()) {
-            return "";
+            return Component.empty();
         }
 
         String message = messageContent;
@@ -141,16 +144,18 @@ public class ConfigManager {
         }
 
         // Use MessageParser for comprehensive format support
-        return MessageParser.parseToLegacy(message);
+        return MessageParser.parse(message);
     }
 
     /**
-     * Process a raw message string and return as Component (preserves MiniMessage formatting).
+     * Process a raw message string and return as Component (preserves MiniMessage
+     * formatting).
      * Use this for GUI lore and other displays that support Component.
      *
      * @param messageContent The actual message content (not a path)
-     * @param context The placeholder context containing dynamic replacements
-     * @return The processed message as Component with MiniMessage formatting preserved
+     * @param context        The placeholder context containing dynamic replacements
+     * @return The processed message as Component with MiniMessage formatting
+     *         preserved
      */
     public Component processMessageAsComponent(String messageContent, PlaceholderContext context) {
         if (messageContent == null || messageContent.isEmpty()) {
@@ -169,11 +174,12 @@ public class ConfigManager {
     }
 
     /**
-     * Send a message to a player using Adventure Component API (preserves MiniMessage formatting).
+     * Send a message to a player using Adventure Component API (preserves
+     * MiniMessage formatting).
      * This is the CORRECT way to send MiniMessage-formatted messages to players.
      *
-     * @param player The player to send the message to
-     * @param path The message path in messages.yml
+     * @param player  The player to send the message to
+     * @param path    The message path in messages.yml
      * @param context The placeholder context
      */
     public void sendMessage(org.bukkit.entity.Player player, String path, PlaceholderContext context) {
@@ -194,12 +200,13 @@ public class ConfigManager {
     /**
      * Send a prefixed message to a player using Adventure Component API.
      *
-     * @param player The player to send the message to
-     * @param path The message path in messages.yml
+     * @param player  The player to send the message to
+     * @param path    The message path in messages.yml
      * @param context The placeholder context
      */
     public void sendPrefixedMessage(org.bukkit.entity.Player player, String path, PlaceholderContext context) {
-        String prefix = messages.getString("prefix", "<gradient:gold:yellow><bold>[PlayerAuctions]</bold></gradient> <gray>»</gray> ");
+        String prefix = messages.getString("prefix",
+                "<gradient:gold:yellow><bold>[PlayerAuctions]</bold></gradient> <gray>»</gray> ");
         String rawMessage = messages.getString(path, "<red>Missing message: " + path + "</red>");
 
         // Apply placeholders
@@ -216,32 +223,30 @@ public class ConfigManager {
         player.sendMessage(combined);
     }
 
-    public String getPrefixedMessage(String path, String... replacements) {
-        String prefix = messages.getString("prefix", "&7[&6KAH&7] ");
-        String message = getMessage(path, replacements);
+    public Component getPrefixedMessage(String path, String... replacements) {
+        String prefixStr = messages.getString("prefix", "&7[&6KAH&7] ");
+        Component prefix = MessageParser.parse(prefixStr);
+        Component message = getMessage(path, replacements);
 
-        // Process prefix with MessageParser
-        String processedPrefix = MessageParser.parseToLegacy(prefix);
-
-        return processedPrefix + message;
+        return prefix.append(message);
     }
 
     /**
-     * Gets a prefixed message with both manual replacements and dynamic placeholder context.
+     * Gets a prefixed message with both manual replacements and dynamic placeholder
+     * context.
      *
-     * @param path The message path in messages.yml
-     * @param context The placeholder context containing dynamic replacements
-     * @param replacements Manual replacements in the format {placeholder, value, placeholder, value, ...}
+     * @param path         The message path in messages.yml
+     * @param context      The placeholder context containing dynamic replacements
+     * @param replacements Manual replacements in the format {placeholder, value,
+     *                     placeholder, value, ...}
      * @return The processed message with prefix and all placeholders replaced
      */
-    public String getPrefixedMessage(String path, PlaceholderContext context, String... replacements) {
-        String prefix = messages.getString("prefix", "&7[&6KAH&7] ");
+    public Component getPrefixedMessage(String path, PlaceholderContext context, String... replacements) {
+        String prefixStr = messages.getString("prefix", "&7[&6KAH&7] ");
+        Component prefix = MessageParser.parse(prefixStr);
+        Component message = getMessage(path, context, replacements);
 
-        // Process prefix with MessageParser
-        String processedPrefix = MessageParser.parseToLegacy(prefix);
-
-        String message = getMessage(path, context, replacements);
-        return processedPrefix + message;
+        return prefix.append(message);
     }
 
     /**
@@ -250,14 +255,14 @@ public class ConfigManager {
      * @param text Text to process
      * @return Processed text with legacy color codes
      */
-    public String processColors(String text) {
-        return MessageParser.parseToLegacy(text);
+    public Component processColors(String text) {
+        return MessageParser.parse(text);
     }
 
     /**
      * Get Component directly for Adventure API usage.
      *
-     * @param path Message path
+     * @param path    Message path
      * @param context Placeholder context
      * @return Parsed Component
      */
@@ -281,4 +286,3 @@ public class ConfigManager {
         return getComponent(path, null);
     }
 }
-

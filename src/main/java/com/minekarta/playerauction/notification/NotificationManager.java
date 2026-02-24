@@ -18,7 +18,8 @@ public class NotificationManager {
     private final com.minekarta.playerauction.players.PlayerSettingsService playerSettingsService;
     private final boolean placeholderApiEnabled;
 
-    public NotificationManager(PlayerAuction plugin, ConfigManager configManager, com.minekarta.playerauction.players.PlayerSettingsService playerSettingsService) {
+    public NotificationManager(PlayerAuction plugin, ConfigManager configManager,
+            com.minekarta.playerauction.players.PlayerSettingsService playerSettingsService) {
         this.plugin = plugin;
         this.configManager = configManager;
         this.playerSettingsService = playerSettingsService;
@@ -42,12 +43,7 @@ public class NotificationManager {
             context.addPlaceholder(cleanKey, entry.getValue());
         }
 
-        String message = configManager.getMessage(messageKey, context);
-
-        // Apply PlaceholderAPI placeholders
-        if (placeholderApiEnabled) {
-            message = PlaceholderAPI.setPlaceholders(player, message);
-        }
+        net.kyori.adventure.text.Component message = configManager.getMessage(messageKey, context);
 
         for (String method : methods) {
             switch (method.toLowerCase()) {
@@ -59,24 +55,33 @@ public class NotificationManager {
                     break;
                 case "title":
                     // Titles can be split into title and subtitle with a newline
-                    String[] parts = message.split("\n", 2);
-                    String title = parts[0];
-                    String subtitle = parts.length > 1 ? parts[1] : "";
-                    player.sendTitle(title, subtitle, 10, 70, 20); // Default fade-in, stay, fade-out times
+                    String plainMessage = com.minekarta.playerauction.util.MessageParser.toPlainText(message);
+                    String[] parts = plainMessage.split("\n", 2);
+                    net.kyori.adventure.text.Component title = com.minekarta.playerauction.util.MessageParser
+                            .parse(parts[0]);
+                    net.kyori.adventure.text.Component subtitle = parts.length > 1
+                            ? com.minekarta.playerauction.util.MessageParser.parse(parts[1])
+                            : net.kyori.adventure.text.Component.empty();
+                    player.showTitle(net.kyori.adventure.title.Title.title(title, subtitle));
                     break;
                 case "sound":
                     try {
                         // Make the sound configurable
-                        String soundName = configManager.getConfig().getString("auction.notification-sound", "BLOCK_NOTE_BLOCK_PLING");
-                        float volume = (float) configManager.getConfig().getDouble("auction.notification-sound-volume", 1.0);
-                        float pitch = (float) configManager.getConfig().getDouble("auction.notification-sound-pitch", 1.0);
+                        String soundName = configManager.getConfig().getString("auction.notification-sound",
+                                "BLOCK_NOTE_BLOCK_PLING");
+                        float volume = (float) configManager.getConfig().getDouble("auction.notification-sound-volume",
+                                1.0);
+                        float pitch = (float) configManager.getConfig().getDouble("auction.notification-sound-pitch",
+                                1.0);
 
-                        // Try to get Sound from enum first (for uppercase enum names like "BLOCK_NOTE_BLOCK_PLING")
+                        // Try to get Sound from enum first (for uppercase enum names like
+                        // "BLOCK_NOTE_BLOCK_PLING")
                         try {
                             Sound sound = Sound.valueOf(soundName);
                             player.playSound(player.getLocation(), sound, volume, pitch);
                         } catch (IllegalArgumentException e) {
-                            // If enum fails, try as resource location (lowercase with dots like "block.note_block.pling")
+                            // If enum fails, try as resource location (lowercase with dots like
+                            // "block.note_block.pling")
                             // Convert enum name format to resource location format if needed
                             String resourceLocation = soundName.toLowerCase().replace("_", ".");
                             // Remove "block." prefix if it's there twice

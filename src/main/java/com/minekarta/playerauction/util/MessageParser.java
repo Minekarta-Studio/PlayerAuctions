@@ -9,10 +9,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Comprehensive message parser with support for MiniMessage, Hex colors, RGB, and Legacy color codes.
+ * Comprehensive message parser with support for MiniMessage, Hex colors, RGB,
+ * and Legacy color codes.
  *
  * Supported formats:
- * - MiniMessage: <gradient:red:blue>Text</gradient>, <color:#FF0000>Text</color>
+ * - MiniMessage: <gradient:red:blue>Text</gradient>,
+ * <color:#FF0000>Text</color>
  * - Hex Colors: &#FF0000Text
  * - RGB Colors: &rgb(255,0,0)Text
  * - Legacy: &a, &b, &c, etc.
@@ -27,7 +29,8 @@ public class MessageParser {
 
     // Pattern untuk detect hex color (#RRGGBB atau &#RRGGBB)
     private static final Pattern HEX_PATTERN = Pattern.compile("&#([A-Fa-f0-9]{6})");
-    private static final Pattern RGB_PATTERN = Pattern.compile("&rgb\\(\\s*([0-9]{1,3})\\s*,\\s*([0-9]{1,3})\\s*,\\s*([0-9]{1,3})\\s*\\)");
+    private static final Pattern RGB_PATTERN = Pattern
+            .compile("&rgb\\(\\s*([0-9]{1,3})\\s*,\\s*([0-9]{1,3})\\s*,\\s*([0-9]{1,3})\\s*\\)");
 
     // Pattern untuk detect MiniMessage tags
     private static final Pattern MINI_MESSAGE_TAG_PATTERN = Pattern.compile("<[^>]+>");
@@ -55,7 +58,8 @@ public class MessageParser {
     }
 
     /**
-     * Parse message dan convert ke legacy format string (untuk backward compatibility).
+     * Parse message dan convert ke legacy format string (untuk backward
+     * compatibility).
      *
      * @param message Raw message string
      * @return Legacy formatted string dengan § codes
@@ -179,7 +183,8 @@ public class MessageParser {
     }
 
     /**
-     * Convert legacy color codes ke MiniMessage format (hanya untuk codes yang tersisa).
+     * Convert legacy color codes ke MiniMessage format (hanya untuk codes yang
+     * tersisa).
      *
      * @param message Message with legacy codes
      * @return Message with MiniMessage tags
@@ -231,18 +236,13 @@ public class MessageParser {
             return false;
         }
 
-        // Check for common MiniMessage tags
+        // Check for common MiniMessage tags (including simple colors and hex codes)
         return message.contains("</") ||
-               message.contains("<gradient") ||
-               message.contains("<rainbow") ||
-               message.contains("<color:#") ||
-               message.contains("<bold>") ||
-               message.contains("<italic>") ||
-               message.contains("<underlined>") ||
-               message.contains("<strikethrough>") ||
-               message.contains("<obfuscated>") ||
-               message.contains("<click:") ||
-               message.contains("<hover:");
+                message.contains("<gradient") ||
+                message.contains("<rainbow") ||
+                message.contains("<color:") ||
+                message.matches(".*<#[0-9a-fA-F]{6}>.*") ||
+                message.matches(".*<[a-z_]+>.*"); // Captures simple tags like <red>, <bold>, <gold>
     }
 
     /**
@@ -253,7 +253,7 @@ public class MessageParser {
      */
     private static boolean hasHexOrRgb(String message) {
         return HEX_PATTERN.matcher(message).find() ||
-               RGB_PATTERN.matcher(message).find();
+                RGB_PATTERN.matcher(message).find();
     }
 
     /**
@@ -281,4 +281,3 @@ public class MessageParser {
         return component.toString();
     }
 }
-

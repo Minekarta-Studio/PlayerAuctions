@@ -6,7 +6,7 @@
 
     <groupId>com.minekarta</groupId>
     <artifactId>player-auctions</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>3.0.0</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -17,62 +17,10 @@
         <minecraft.version>1.21</minecraft.version>
         <paper.version>1.21.8-R0.1-SNAPSHOT</paper.version>
         <if.version>0.11.5</if.version>
-        <plugin.version>2.5.4</plugin.version>
-    </properties>
-
-    <profiles>
-        <!-- Modern Minecraft versions (1.19 - 1.21) -->
-        <profile>
-            <id>modern</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <properties>
-                <minecraft.version>1.21</minecraft.version>
-                <paper.version>1.21.8-R0.1-SNAPSHOT</paper.version>
-                <if.version>0.11.5</if.version>
-                <plugin.version>2.5.4</plugin.version>
-                <build.finalName>PlayerAuctions-${plugin.version}-Modern</build.finalName>
-            </properties>
-        </profile>
-
-        <!-- Legacy Minecraft versions (1.16 - 1.18) -->
-        <profile>
-            <id>legacy</id>
-            <properties>
-                <minecraft.version>1.18.2</minecraft.version>
-                <paper.version>1.18.2-R0.1-SNAPSHOT</paper.version>
-                <if.version>0.10.8</if.version>
-                <plugin.version>1.9.9</plugin.version>
-                <build.finalName>PlayerAuctions-${plugin.version}-Legacy</build.finalName>
-            </properties>
-        </profile>
-
-        <!-- Specific version builds -->
-        <profile>
-            <id>1.20</id>
-            <properties>
-                <minecraft.version>1.20</minecraft.version>
-                <paper.version>1.20.6-R0.1-SNAPSHOT</paper.version>
-                <if.version>0.11.5</if.version>
-                <plugin.version>2.0.0</plugin.version>
-                <build.finalName>PlayerAuctions-${plugin.version}-1.20</build.finalName>
-            </properties>
-        </profile>
-
-        <profile>
-            <id>1.19</id>
-            <properties>
-                <minecraft.version>1.19</minecraft.version>
-                <paper.version>1.19.4-R0.1-SNAPSHOT</paper.version>
-                <if.version>0.11.5</if.version>
-                <plugin.version>2.0.0</plugin.version>
-                <build.finalName>PlayerAuctions-${plugin.version}-1.19</build.finalName>
-            </properties>
-        </profile>
-    </profiles>
-
-    <repositories>
+        <plugin.version>3.0.0</plugin.version>
+        <cloud.version>2.0.0-beta.10</cloud.version>
+        <build.finalName>PlayerAuctions-${plugin.version}</build.finalName>
+    </properties>    <repositories>
         <repository>
             <id>papermc-repo</id>
             <url>https://repo.papermc.io/repository/maven-public/</url>
@@ -116,25 +64,19 @@
             <groupId>net.kyori</groupId>
             <artifactId>adventure-api</artifactId>
             <version>4.14.0</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>net.kyori</groupId>
             <artifactId>adventure-text-minimessage</artifactId>
             <version>4.14.0</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>net.kyori</groupId>
-            <artifactId>adventure-platform-bukkit</artifactId>
-            <version>4.3.2</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>net.kyori</groupId>
             <artifactId>adventure-text-serializer-legacy</artifactId>
             <version>4.14.0</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -159,6 +101,11 @@
             <artifactId>junit-jupiter</artifactId>
             <version>5.10.1</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.incendo</groupId>
+            <artifactId>cloud-paper</artifactId>
+            <version>${cloud.version}</version>
         </dependency>
     </dependencies>
 
@@ -222,13 +169,14 @@
                                     <pattern>com.github.stefvanschie.inventoryframework</pattern>
                                     <shadedPattern>com.minekarta.playerauction.lib.inventoryframework</shadedPattern>
                                 </relocation>
+
                                 <relocation>
-                                    <pattern>net.kyori.adventure</pattern>
-                                    <shadedPattern>com.minekarta.playerauction.lib.adventure</shadedPattern>
+                                    <pattern>org.incendo.cloud</pattern>
+                                    <shadedPattern>com.minekarta.playerauction.lib.cloud</shadedPattern>
                                 </relocation>
                                 <relocation>
-                                    <pattern>net.kyori.examination</pattern>
-                                    <shadedPattern>com.minekarta.playerauction.lib.examination</shadedPattern>
+                                    <pattern>io.leangen.geantyref</pattern>
+                                    <shadedPattern>com.minekarta.playerauction.lib.geantyref</shadedPattern>
                                 </relocation>
                             </relocations>
                         </configuration>

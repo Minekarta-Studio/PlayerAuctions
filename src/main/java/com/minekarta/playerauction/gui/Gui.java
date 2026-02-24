@@ -105,7 +105,7 @@ public abstract class Gui implements InventoryHolder, Listener {
             return CompletableFuture.completedFuture(
                 new GuiItemBuilder(Material.PLAYER_HEAD)
                     .setSkullOwner(player.getName())
-                    .setName("&#F5A623" + player.getName())
+                    .setName("<#F5A623>" + player.getName())
                     .build()
             );
         }
@@ -116,23 +116,23 @@ public abstract class Gui implements InventoryHolder, Listener {
             // Build complete player profile lore with modern hex colors
             java.util.List<String> lore = new java.util.ArrayList<>();
             lore.add("");
-            lore.add("&#2C3E50━━━━━━━━━━━━━━━━━━━━━");
-            lore.add("&#7F8C8D       ᴘʟᴀʏᴇʀ sᴛᴀᴛs");
-            lore.add("&#2C3E50━━━━━━━━━━━━━━━━━━━━━");
+            lore.add("<#2C3E50>━━━━━━━━━━━━━━━━━━━━━");
+            lore.add("<#7F8C8D>       ᴘʟᴀʏᴇʀ sᴛᴀᴛs");
+            lore.add("<#2C3E50>━━━━━━━━━━━━━━━━━━━━━");
             lore.add("");
-            lore.add("&#7F8C8DBalance    &#2ECC71" + formattedBalance);
+            lore.add("<#7F8C8D>Balance    <#2ECC71>" + formattedBalance);
 
             // Add page info if this is a paginated GUI
             if (this instanceof PaginatedGui paginatedGui) {
-                lore.add("&#7F8C8DPage       &#ECF0F1" + paginatedGui.page);
+                lore.add("<#7F8C8D>Page       <#ECF0F1>" + paginatedGui.page);
             }
 
             lore.add("");
-            lore.add("&#2C3E50━━━━━━━━━━━━━━━━━━━━━");
+            lore.add("<#2C3E50>━━━━━━━━━━━━━━━━━━━━━");
 
             return new GuiItemBuilder(Material.PLAYER_HEAD)
                 .setSkullOwner(player.getName())
-                .setName("&#F5A623" + player.getName())
+                .setName("<#F5A623>" + player.getName())
                 .setLore(lore)
                 .build();
         });
