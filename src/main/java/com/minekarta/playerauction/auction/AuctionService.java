@@ -36,7 +36,10 @@ public class AuctionService {
 
     private final ConcurrentHashMap<UUID, ReentrantLock> auctionLocks = new ConcurrentHashMap<>();
 
-    public AuctionService(JavaPlugin plugin, Executor asyncExecutor, AuctionStorage auctionStorage, EconomyRouter economyRouter, ConfigManager configManager, NotificationManager notificationManager, com.minekarta.playerauction.transaction.TransactionLogger transactionLogger, com.minekarta.playerauction.mailbox.MailboxService mailboxService) {
+    public AuctionService(JavaPlugin plugin, Executor asyncExecutor, AuctionStorage auctionStorage,
+            EconomyRouter economyRouter, ConfigManager configManager, NotificationManager notificationManager,
+            com.minekarta.playerauction.transaction.TransactionLogger transactionLogger,
+            com.minekarta.playerauction.mailbox.MailboxService mailboxService) {
         this.plugin = plugin;
         this.asyncExecutor = asyncExecutor;
         this.auctionStorage = auctionStorage;
@@ -47,7 +50,8 @@ public class AuctionService {
         this.mailboxService = mailboxService;
     }
 
-    public CompletableFuture<Boolean> createListing(Player player, ItemStack item, double price, Double buyNowPrice, Double reservePrice, long durationMillis) {
+    public CompletableFuture<Boolean> createListing(Player player, ItemStack item, double price, Double buyNowPrice,
+            Double reservePrice, long durationMillis) {
         SerializedItem serializedItem = SerializedItem.fromItemStack(item);
         Auction auction = new Auction(
                 UUID.randomUUID(),
@@ -88,163 +92,190 @@ public class AuctionService {
                 double buyPrice = auction.price();
 
                 // CRITICAL FIX: Reserve the auction FIRST by marking it as FINISHED
-                // This prevents race conditions where multiple buyers can purchase the same item
+                // This prevents race conditions where multiple buyers can purchase the same
+                // item
                 Auction reservedAuction = auction.withStatus(AuctionStatus.FINISHED).withIncrementedVersion();
                 return auctionStorage.updateAuctionIfVersionMatches(reservedAuction, auction.version())
-                    .thenCompose(reserved -> {
-                        if (!reserved) {
-                            // Another buyer already purchased this, or auction was modified
-                            buyer.sendMessage(configManager.getPrefixedMessage("errors.buy-fail"));
-                            return CompletableFuture.completedFuture(false);
-                        }
+                        .thenCompose(reserved -> {
+                            if (!reserved) {
+                                // Another buyer already purchased this, or auction was modified
+                                buyer.sendMessage(configManager.getPrefixedMessage("errors.buy-fail"));
+                                return CompletableFuture.completedFuture(false);
+                            }
 
-                        // Auction is now reserved, proceed with money transfer
-                        return economy.withdraw(buyer.getUniqueId(), buyPrice, "Purchase item " + auction.id())
-                            .thenCompose(withdrawn -> {
-                                if (!withdrawn) {
-                                    // Rollback: restore auction to ACTIVE
-                                    Auction rollbackAuction = auction.withStatus(AuctionStatus.ACTIVE).withIncrementedVersion();
-                                    auctionStorage.updateAuctionIfVersionMatches(rollbackAuction, reservedAuction.version());
-                                    buyer.sendMessage(configManager.getPrefixedMessage("errors.not-enough-money"));
-                                    return CompletableFuture.completedFuture(false);
-                                }
+                            // Auction is now reserved, proceed with money transfer
+                            return economy.withdraw(buyer.getUniqueId(), buyPrice, "Purchase item " + auction.id())
+                                    .thenCompose(withdrawn -> {
+                                        if (!withdrawn) {
+                                            // Rollback: restore auction to ACTIVE
+                                            Auction rollbackAuction = auction.withStatus(AuctionStatus.ACTIVE)
+                                                    .withIncrementedVersion();
+                                            auctionStorage.updateAuctionIfVersionMatches(rollbackAuction,
+                                                    reservedAuction.version());
+                                            buyer.sendMessage(
+                                                    configManager.getPrefixedMessage("errors.not-enough-money"));
+                                            return CompletableFuture.completedFuture(false);
+                                        }
 
-                                double tax = configManager.getConfig().getDouble("auction.tax-percentage", 0);
-                                double sellerAmount = buyPrice * (1 - tax / 100.0);
+                                        double tax = configManager.getConfig().getDouble("auction.tax-percentage", 0);
+                                        double sellerAmount = buyPrice * (1 - tax / 100.0);
 
-                                // Deposit to seller
-                                return economy.deposit(auction.seller(), sellerAmount, "Sold item")
-                                    .thenCompose(v -> {
-                                        // Give item to buyer on MAIN THREAD (inventory operations must be sync)
-                                        CompletableFuture<Boolean> itemDelivery = new CompletableFuture<>();
+                                        // Deposit to seller
+                                        return economy.deposit(auction.seller(), sellerAmount, "Sold item")
+                                                .thenCompose(v -> {
+                                                    // Give item to buyer on MAIN THREAD (inventory operations must be
+                                                    // sync)
+                                                    CompletableFuture<Boolean> itemDelivery = new CompletableFuture<>();
 
-                                        plugin.getServer().getScheduler().runTask(plugin, () -> {
-                                            try {
-                                                ItemStack itemToGive = auction.item().toItemStack();
-                                                if (itemToGive == null) {
-                                                    plugin.getLogger().severe("Failed to deserialize item for auction " + auction.id());
-                                                    itemDelivery.complete(false);
-                                                    return;
-                                                }
+                                                    plugin.getServer().getScheduler().runTask(plugin, () -> {
+                                                        try {
+                                                            ItemStack itemToGive = auction.item().toItemStack();
+                                                            if (itemToGive == null) {
+                                                                plugin.getLogger().severe(
+                                                                        "Failed to deserialize item for auction "
+                                                                                + auction.id());
+                                                                itemDelivery.complete(false);
+                                                                return;
+                                                            }
 
-                                                if (buyer.getInventory().firstEmpty() == -1) {
-                                                    // Inventory full, drop at player location
-                                                    buyer.getWorld().dropItem(buyer.getLocation(), itemToGive);
-                                                    buyer.sendMessage(configManager.getPrefixedMessage("errors.inventory-full"));
-                                                } else {
-                                                    buyer.getInventory().addItem(itemToGive);
-                                                }
+                                                            if (buyer.getInventory().firstEmpty() == -1) {
+                                                                // Inventory full, drop at player location
+                                                                buyer.getWorld().dropItem(buyer.getLocation(),
+                                                                        itemToGive);
+                                                                buyer.sendMessage(configManager
+                                                                        .getPrefixedMessage("errors.inventory-full"));
+                                                            } else {
+                                                                buyer.getInventory().addItem(itemToGive);
+                                                            }
 
-                                                itemDelivery.complete(true);
-                                            } catch (Exception ex) {
-                                                plugin.getLogger().severe("Error delivering item: " + ex.getMessage());
-                                                ex.printStackTrace();
-                                                itemDelivery.complete(false);
-                                            }
-                                        });
+                                                            itemDelivery.complete(true);
+                                                        } catch (Exception ex) {
+                                                            plugin.getLogger().severe(
+                                                                    "Error delivering item: " + ex.getMessage());
+                                                            ex.printStackTrace();
+                                                            itemDelivery.complete(false);
+                                                        }
+                                                    });
 
-                                        return itemDelivery.thenApply(delivered -> {
-                                            if (delivered) {
-                                                // Success! Notify seller and log transaction
-                                                Player seller = Bukkit.getPlayer(auction.seller());
-                                                if (seller != null && seller.isOnline()) {
-                                                    notificationManager.sendNotification(seller, "auction.sold", Map.of(
-                                                        "%item%", auction.item().toItemStack() != null ?
-                                                            auction.item().toItemStack().getType().toString() : "Unknown",
-                                                        "%price%", economy.format(sellerAmount)
-                                                    ));
-                                                }
+                                                    return itemDelivery.thenApply(delivered -> {
+                                                        if (delivered) {
+                                                            // Success! Notify seller and log transaction
+                                                            Player seller = Bukkit.getPlayer(auction.seller());
+                                                            if (seller != null && seller.isOnline()) {
+                                                                notificationManager.sendNotification(seller,
+                                                                        "auction.sold", Map.of(
+                                                                                "%item%",
+                                                                                auction.item().toItemStack() != null
+                                                                                        ? auction.item().toItemStack()
+                                                                                                .getType().toString()
+                                                                                        : "Unknown",
+                                                                                "%price%",
+                                                                                economy.format(sellerAmount)));
+                                                            }
 
-                                                transactionLogger.log(auction, "SOLD", buyer.getUniqueId(), buyPrice);
+                                                            transactionLogger.log(auction, "SOLD", buyer.getUniqueId(),
+                                                                    buyPrice);
 
-                                                // Broadcast purchase to all players
-                                                com.minekarta.playerauction.notification.BroadcastManager broadcastManager =
-                                                    ((com.minekarta.playerauction.PlayerAuction) plugin).getBroadcastManager();
-                                                if (broadcastManager != null) {
-                                                    String sellerName = seller != null && seller.isOnline() ?
-                                                        seller.getName() :
-                                                        plugin.getServer().getOfflinePlayer(auction.seller()).getName();
-                                                    ItemStack itemStack = auction.item().toItemStack();
+                                                            // Broadcast purchase to all players
+                                                            com.minekarta.playerauction.notification.BroadcastManager broadcastManager = ((com.minekarta.playerauction.PlayerAuction) plugin)
+                                                                    .getBroadcastManager();
+                                                            if (broadcastManager != null) {
+                                                                String sellerName = seller != null && seller.isOnline()
+                                                                        ? seller.getName()
+                                                                        : plugin.getServer()
+                                                                                .getOfflinePlayer(auction.seller())
+                                                                                .getName();
+                                                                ItemStack itemStack = auction.item().toItemStack();
 
-                                                    broadcastManager.broadcastPurchase(
-                                                        buyer.getName(),
-                                                        sellerName,
-                                                        itemStack != null ? itemStack.getType().toString() : "Unknown",
-                                                        itemStack != null ? itemStack.getAmount() : 1,
-                                                        economy.format(buyPrice),
-                                                        buyer.getWorld()
-                                                    );
-                                                }
+                                                                broadcastManager.broadcastPurchase(
+                                                                        buyer.getName(),
+                                                                        sellerName,
+                                                                        itemStack != null
+                                                                                ? itemStack.getType().toString()
+                                                                                : "Unknown",
+                                                                        itemStack != null ? itemStack.getAmount() : 1,
+                                                                        economy.format(buyPrice),
+                                                                        buyer.getWorld());
+                                                            }
 
-                                                return true;
-                                            } else {
-                                                // Item delivery failed - rare edge case
-                                                plugin.getLogger().warning("Item delivery failed for auction " + auction.id());
-                                                return false;
-                                            }
-                                        });
+                                                            return true;
+                                                        } else {
+                                                            // Item delivery failed - rare edge case
+                                                            plugin.getLogger().warning(
+                                                                    "Item delivery failed for auction " + auction.id());
+                                                            return false;
+                                                        }
+                                                    });
+                                                })
+                                                .exceptionally(ex -> {
+                                                    // Seller deposit failed - refund buyer and rollback auction
+                                                    plugin.getLogger().severe("Seller deposit failed for auction "
+                                                            + auction.id() + ": " + ex.getMessage());
+                                                    economy.deposit(buyer.getUniqueId(), buyPrice,
+                                                            "Refund - seller deposit failed");
+
+                                                    // Rollback auction to ACTIVE
+                                                    Auction rollbackAuction = auction.withStatus(AuctionStatus.ACTIVE)
+                                                            .withIncrementedVersion();
+                                                    auctionStorage.updateAuctionIfVersionMatches(rollbackAuction,
+                                                            reservedAuction.version());
+
+                                                    buyer.sendMessage(
+                                                            configManager.getPrefixedMessage("errors.buy-fail"));
+                                                    return false;
+                                                });
                                     })
                                     .exceptionally(ex -> {
-                                        // Seller deposit failed - refund buyer and rollback auction
-                                        plugin.getLogger().severe("Seller deposit failed for auction " + auction.id() + ": " + ex.getMessage());
-                                        economy.deposit(buyer.getUniqueId(), buyPrice, "Refund - seller deposit failed");
-
-                                        // Rollback auction to ACTIVE
-                                        Auction rollbackAuction = auction.withStatus(AuctionStatus.ACTIVE).withIncrementedVersion();
-                                        auctionStorage.updateAuctionIfVersionMatches(rollbackAuction, reservedAuction.version());
+                                        // Withdrawal failed - rollback auction
+                                        plugin.getLogger().severe("Withdrawal failed for auction " + auction.id() + ": "
+                                                + ex.getMessage());
+                                        Auction rollbackAuction = auction.withStatus(AuctionStatus.ACTIVE)
+                                                .withIncrementedVersion();
+                                        auctionStorage.updateAuctionIfVersionMatches(rollbackAuction,
+                                                reservedAuction.version());
 
                                         buyer.sendMessage(configManager.getPrefixedMessage("errors.buy-fail"));
                                         return false;
                                     });
-                            })
-                            .exceptionally(ex -> {
-                                // Withdrawal failed - rollback auction
-                                plugin.getLogger().severe("Withdrawal failed for auction " + auction.id() + ": " + ex.getMessage());
-                                Auction rollbackAuction = auction.withStatus(AuctionStatus.ACTIVE).withIncrementedVersion();
-                                auctionStorage.updateAuctionIfVersionMatches(rollbackAuction, reservedAuction.version());
-
-                                buyer.sendMessage(configManager.getPrefixedMessage("errors.buy-fail"));
-                                return false;
-                            });
-                    });
+                        });
             });
         });
     }
 
     public CompletableFuture<Boolean> cancelAuction(Player player, UUID auctionId) {
-        return executeWithLock(auctionId, () ->
-            auctionStorage.findById(auctionId).thenCompose(optAuction -> {
-                if (optAuction.isEmpty()) {
-                    return CompletableFuture.completedFuture(false);
-                }
-                Auction auction = optAuction.get();
-                if (!auction.seller().equals(player.getUniqueId())) {
-                    player.sendMessage(configManager.getPrefixedMessage("errors.not-your-auction"));
-                    return CompletableFuture.completedFuture(false);
-                }
-                if (auction.status() != AuctionStatus.ACTIVE) {
-                    player.sendMessage(configManager.getPrefixedMessage("errors.auction-not-active"));
-                    return CompletableFuture.completedFuture(false);
-                }
+        return executeWithLock(auctionId, () -> auctionStorage.findById(auctionId).thenCompose(optAuction -> {
+            if (optAuction.isEmpty()) {
+                return CompletableFuture.completedFuture(false);
+            }
+            Auction auction = optAuction.get();
+            if (!auction.seller().equals(player.getUniqueId())) {
+                player.sendMessage(configManager.getPrefixedMessage("errors.not-your-auction"));
+                return CompletableFuture.completedFuture(false);
+            }
+            if (auction.status() != AuctionStatus.ACTIVE) {
+                player.sendMessage(configManager.getPrefixedMessage("errors.auction-not-active"));
+                return CompletableFuture.completedFuture(false);
+            }
 
-                // Return item directly to seller
-                ItemStack itemToReturn = auction.item().toItemStack();
-                if (player.getInventory().firstEmpty() == -1) {
-                    // Inventory full, drop item at player location
-                    player.getWorld().dropItem(player.getLocation(), itemToReturn);
-                    player.sendMessage(configManager.getPrefixedMessage("inventory-full", "Inventory full, item dropped on ground"));
-                } else {
-                    player.getInventory().addItem(itemToReturn);
-                }
+            // Return item directly to seller
+            ItemStack itemToReturn = auction.item().toItemStack();
+            if (player.getInventory().firstEmpty() == -1) {
+                // Inventory full, drop item at player location
+                player.getWorld().dropItem(player.getLocation(), itemToReturn);
+                player.sendMessage(
+                        configManager.getPrefixedMessage("inventory-full", "Inventory full, item dropped on ground"));
+            } else {
+                player.getInventory().addItem(itemToReturn);
+            }
 
-                Auction updatedAuction = auction.withStatus(AuctionStatus.CANCELLED).withIncrementedVersion();
-                return auctionStorage.updateAuctionIfVersionMatches(updatedAuction, auction.version())
-                        .thenApply(updated -> {
-                            if(updated) transactionLogger.log(updatedAuction, "CANCELLED", null, null);
-                            return updated;
-                        });
-            })
-        );
+            Auction updatedAuction = auction.withStatus(AuctionStatus.CANCELLED).withIncrementedVersion();
+            return auctionStorage.updateAuctionIfVersionMatches(updatedAuction, auction.version())
+                    .thenApply(updated -> {
+                        if (updated)
+                            transactionLogger.log(updatedAuction, "CANCELLED", null, null);
+                        return updated;
+                    });
+        }));
     }
 
     public void processExpiredAuctions() {
@@ -255,40 +286,39 @@ public class AuctionService {
             }
             for (Auction auction : expiredAuctions) {
                 executeWithLock(auction.id(), () ->
-                    // Re-fetch to ensure it's still valid to process
-                    auctionStorage.findById(auction.id()).thenCompose(optAuction -> {
-                        if (optAuction.isEmpty() || optAuction.get().status() != AuctionStatus.ACTIVE) {
-                            return CompletableFuture.completedFuture(false); // Already processed
+                // Re-fetch to ensure it's still valid to process
+                auctionStorage.findById(auction.id()).thenCompose(optAuction -> {
+                    if (optAuction.isEmpty() || optAuction.get().status() != AuctionStatus.ACTIVE) {
+                        return CompletableFuture.completedFuture(false); // Already processed
+                    }
+
+                    Auction current = optAuction.get();
+
+                    // Expired - return item to seller
+                    Player seller = Bukkit.getPlayer(current.seller());
+                    if (seller != null && seller.isOnline()) {
+                        ItemStack itemToReturn = current.item().toItemStack();
+                        if (seller.getInventory().firstEmpty() == -1) {
+                            // Inventory full, drop item at seller location
+                            seller.getWorld().dropItem(seller.getLocation(), itemToReturn);
+                            seller.sendMessage(configManager.getPrefixedMessage("inventory-full",
+                                    "Inventory full, expired item dropped on ground"));
+                        } else {
+                            seller.getInventory().addItem(itemToReturn);
                         }
+                        notificationManager.sendNotification(seller, "auction.expired", Map.of(
+                                "%item%", current.item().toItemStack().getType().toString()));
+                    }
 
-                        Auction current = optAuction.get();
-
-                        // Expired - return item to seller
-                        Player seller = Bukkit.getPlayer(current.seller());
-                        if (seller != null && seller.isOnline()) {
-                            ItemStack itemToReturn = current.item().toItemStack();
-                            if (seller.getInventory().firstEmpty() == -1) {
-                                // Inventory full, drop item at seller location
-                                seller.getWorld().dropItem(seller.getLocation(), itemToReturn);
-                                seller.sendMessage(configManager.getPrefixedMessage("inventory-full", "Inventory full, expired item dropped on ground"));
-                            } else {
-                                seller.getInventory().addItem(itemToReturn);
-                            }
-                            notificationManager.sendNotification(seller, "auction.expired", Map.of(
-                                "%item%", current.item().toItemStack().getType().toString()
-                            ));
-                        }
-
-                        Auction updated = current.withStatus(AuctionStatus.EXPIRED).withIncrementedVersion();
-                        return auctionStorage.updateAuctionIfVersionMatches(updated, current.version())
-                                .thenApply(isUpdated -> {
-                                    if (isUpdated) {
-                                        transactionLogger.log(updated, "EXPIRED");
-                                    }
-                                    return isUpdated;
-                                });
-                    })
-                );
+                    Auction updated = current.withStatus(AuctionStatus.EXPIRED).withIncrementedVersion();
+                    return auctionStorage.updateAuctionIfVersionMatches(updated, current.version())
+                            .thenApply(isUpdated -> {
+                                if (isUpdated) {
+                                    transactionLogger.log(updated, "EXPIRED");
+                                }
+                                return isUpdated;
+                            });
+                }));
             }
         });
     }
@@ -308,12 +338,14 @@ public class AuctionService {
     }
 
     // Getters
-    public CompletableFuture<List<Auction>> getActiveAuctions(int page, int limit, com.minekarta.playerauction.gui.model.AuctionCategory category, com.minekarta.playerauction.gui.model.SortOrder sortOrder) {
+    public CompletableFuture<List<Auction>> getActiveAuctions(int page, int limit,
+            com.minekarta.playerauction.gui.model.AuctionCategory category,
+            com.minekarta.playerauction.gui.model.SortOrder sortOrder) {
         return auctionStorage.findActiveAuctions(page, limit, category, sortOrder);
     }
 
     public CompletableFuture<List<Auction>> getPlayerAuctions(UUID playerId, int page, int limit) {
-        return auctionStorage.findBySeller(playerId, page, limit);
+        return auctionStorage.findBySeller(playerId, limit, (page - 1) * limit);
     }
 
     public CompletableFuture<List<Auction>> getPlayerHistory(UUID playerId, int page, int limit) {
@@ -328,11 +360,24 @@ public class AuctionService {
         return auctionStorage.countAllActiveAuctions();
     }
 
-
     // Public getters for fields needed by other classes
-    public ConfigManager getConfigManager() { return configManager; }
-    public EconomyRouter getEconomyRouter() { return economyRouter; }
-    public Executor getAsyncExecutor() { return asyncExecutor; }
-    public AuctionStorage getAuctionStorage() { return auctionStorage; }
-    public JavaPlugin getPlugin() { return plugin; }
+    public ConfigManager getConfigManager() {
+        return configManager;
+    }
+
+    public EconomyRouter getEconomyRouter() {
+        return economyRouter;
+    }
+
+    public Executor getAsyncExecutor() {
+        return asyncExecutor;
+    }
+
+    public AuctionStorage getAuctionStorage() {
+        return auctionStorage;
+    }
+
+    public JavaPlugin getPlugin() {
+        return plugin;
+    }
 }

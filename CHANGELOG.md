@@ -1,5 +1,21 @@
 # PlayerAuctions Changelog
 
+## Version 3.0.0 (February 25, 2026)
+
+### Major Changes
+- **Migrated to Cloud Command Framework (CCF)**: Rebuilt the entire command system for robust and native Paper command execution, including dynamic tab completions and strict argument parsing.
+- **Removed Legacy Support**: Discontinued support for Minecraft versions 1.18 to 1.20 to fully standardize compatibility and features with the latest Paper 1.21 API.
+- **Modernized GUI Formatting**: Fully integrated the Adventure Component API and MiniMessage formatting internally.
+
+### Fixed
+- **Fixed MiniMessage and Gradient Parsing Issues**: Resolved bugs where MiniMessage and Hex gradients were explicitly stripped down to legacy ampersands, destroying formats in GUIs.
+- **Removed Default Minecraft Italicization**: Removed forced default italics on GUI item names and lores across all PlayerAuctions menus. Let your configurations shine!
+- **Fixed My Listings GUI Blank Page Bug**: Fixed a misapplied SQL offset argument that caused active items from an individual player to not load correctly within the player's personal listings interface.
+- Resolved `NoSuchMethodError` for native component formatting caused by old Maven shade relocations on the Adventure API.
+- Re-implemented the missing MiniMessage tag checking regex inside `MessageParser` to accurately detect Hex tags natively.
+
+---
+
 ## Version 2.5.5 (January 27, 2026)
 
 ### Fixed
