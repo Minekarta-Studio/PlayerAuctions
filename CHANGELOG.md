@@ -1,5 +1,12 @@
 # PlayerAuctions Changelog
 
+## Version 3.1.0 (February 25, 2026)
+
+### Added
+- **Mailbox Integration for Auctions**: Items and revenues are now safely routed through the Mailbox system!
+  - **Cancelled Auctions**: Instead of forcefully dropping returned items on the ground or cluttering the inventory, cancelling an auction now instantly sends the item to the Mailbox for asynchronous retrieval.
+  - **Auction Sales**: When an item is bought, the revenue is sent to the seller's Mailbox as a distinct money notification instead of spontaneously appearing in the player's balance. Claiming the money notification within the Mailbox deposits the balance seamlessly and serves as a read receipt for the transaction.
+
 ## Version 3.0.0 (February 25, 2026)
 
 ### Major Changes
